@@ -6,6 +6,7 @@ import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
 import io.jsonwebtoken.io.Decoders
 import io.jsonwebtoken.security.Keys
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.stereotype.Service
 import java.security.Key
@@ -13,17 +14,19 @@ import java.util.*
 
 @Service
 class JwtService(
-    private val props: WebJwtProperties
+
+    @Value("\${security.jwt.web.secret}")
+    private val secret: String,
+
+    @Value("\${security.jwt.web.expiration}")
+    private val expiration: Long
 ) {
 
     private val key: Key by lazy {
         Keys.hmacShaKeyFor(
-            Decoders.BASE64.decode(props.secret)
+            Decoders.BASE64.decode(secret)
         )
     }
-
-    private val validityMs: Long
-        get() = props.expiration
 
     // ===============================
     // TOKEN GENERATION
@@ -31,7 +34,7 @@ class JwtService(
 
     fun generateToken(user: AppUser): String {
         val now = Date()
-        val exp = Date(now.time + validityMs)
+        val exp = Date(now.time + expiration)
 
         val claims = Jwts.claims().setSubject(user.email)
         claims["userId"] = user.id.toString()
