@@ -87,13 +87,6 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- 🔗 DOMAIN -->
-        <dependency>
-            <groupId>br.com.bipos</groupId>
-            <artifactId>bipos-domain</artifactId>
-            <version>1.0.0</version>
-        </dependency>
-
         <!-- TESTES -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
