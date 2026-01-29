@@ -1,6 +1,7 @@
 package br.com.bipos.webapi.domain.module
 
 import jakarta.persistence.*
+import org.hibernate.annotations.UuidGenerator
 import java.util.*
 
 @Entity
@@ -8,7 +9,7 @@ import java.util.*
 class Module(
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @UuidGenerator
     val id: UUID? = null,
 
     @Enumerated(EnumType.STRING)

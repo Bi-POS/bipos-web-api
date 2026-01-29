@@ -28,6 +28,11 @@ class JwtService(
         )
     }
 
+    init {
+        println("JWT SECRET carregado? ${secret.isNotBlank()}")
+    }
+
+
     // ===============================
     // TOKEN GENERATION
     // ===============================
