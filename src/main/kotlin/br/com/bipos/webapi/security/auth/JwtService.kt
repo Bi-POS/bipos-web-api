@@ -13,7 +13,7 @@ import java.util.*
 
 @Service
 class JwtService(
-    private val props: JwtProperties
+    private val props: WebJwtProperties
 ) {
 
     private val key: Key by lazy {

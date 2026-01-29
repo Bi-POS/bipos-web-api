@@ -1,12 +1,12 @@
 package br.com.bipos.webapi
 
-import br.com.bipos.webapi.security.auth.JwtProperties
+import br.com.bipos.webapi.security.auth.WebJwtProperties
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.runApplication
 
 @SpringBootApplication
-@EnableConfigurationProperties(JwtProperties::class)
+@EnableConfigurationProperties(WebJwtProperties::class)
 class WebApiApplication
 
 fun main(args: Array<String>) {
