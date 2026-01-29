@@ -12,8 +12,8 @@ import org.springframework.transaction.annotation.Transactional
 class ModuleInitializer(
     private val moduleRepository: ModuleRepository
 ) {
+
     @EventListener(ApplicationReadyEvent::class)
-    @Transactional
     fun init() {
         try {
             ModuleType.entries.forEach { type ->
