@@ -1,5 +1,6 @@
 package br.com.bipos.webapi
 
+import br.com.bipos.webapi.init.SpacesProperties
 import br.com.bipos.webapi.security.auth.WebJwtProperties
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.autoconfigure.domain.EntityScan
@@ -8,7 +9,10 @@ import org.springframework.boot.runApplication
 
 @SpringBootApplication
 @EntityScan("br.com.bipos.webapi.domain")
-@EnableConfigurationProperties(WebJwtProperties::class)
+@EnableConfigurationProperties(
+    WebJwtProperties::class,
+    SpacesProperties::class
+)
 class WebApiApplication
 
 fun main(args: Array<String>) {
