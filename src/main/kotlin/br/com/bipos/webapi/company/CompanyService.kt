@@ -30,7 +30,7 @@ class CompanyService(
     private val passwordEncoder: PasswordEncoder
 ) {
 
-    private val uploadBaseDir = Paths.get("/var/www/bipos/uploads/logos")
+    private val uploadBaseDir = Paths.get("/app/uploads/logos")
     private val publicBasePath = "/uploads/logos"
 
     /* =========================
