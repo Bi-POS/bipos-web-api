@@ -8,7 +8,8 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 class StaticResourceConfig : WebMvcConfigurer {
 
     override fun addResourceHandlers(registry: ResourceHandlerRegistry) {
-        registry.addResourceHandler("/uploads/**")
-            .addResourceLocations("file:uploads/")
+        registry
+            .addResourceHandler("/uploads/**")
+            .addResourceLocations("file:/var/www/bipos/uploads/")
     }
 }

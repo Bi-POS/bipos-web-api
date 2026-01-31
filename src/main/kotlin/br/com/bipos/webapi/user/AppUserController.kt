@@ -21,6 +21,7 @@ import java.util.*
 class UserController(
     private val appUserService: AppUserService
 ) {
+
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('OWNER','ADMIN','MANAGER','OPERATOR')")
     fun getById(
@@ -30,20 +31,6 @@ class UserController(
 
         val user = appUserService.getById(id, currentUser.company?.id!!)
         return ResponseEntity.ok(user)
-    }
-
-    @GetMapping("/{id}/photo")
-    fun getPhoto(@PathVariable id: UUID): ResponseEntity<Resource> {
-
-        val resource = appUserService.loadPhoto(id)
-            ?: return ResponseEntity.notFound().build()
-
-        return ResponseEntity.ok()
-            .header(HttpHeaders.CACHE_CONTROL, "no-cache, no-store, must-revalidate")
-            .header(HttpHeaders.PRAGMA, "no-cache")
-            .header(HttpHeaders.EXPIRES, "0")
-            .contentType(MediaType.IMAGE_PNG)
-            .body(resource)
     }
 
     /* =========================
@@ -76,22 +63,23 @@ class UserController(
     }
 
     /* =========================
-       ATUALIZAR USUÁRIO
+       ATUALIZAR FOTO
        ========================= */
+
     @PutMapping("/{id}/photo")
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN')")
     fun updatePhoto(
         @PathVariable id: UUID,
         @RequestParam("file") file: MultipartFile
     ): ResponseEntity<Void> {
-        appUserService.updatePhoto(id, file)
 
-        return ResponseEntity.noContent()
-            .header(HttpHeaders.CACHE_CONTROL, "no-cache, no-store, must-revalidate")
-            .header(HttpHeaders.PRAGMA, "no-cache")
-            .header(HttpHeaders.EXPIRES, "0")
-            .build()
+        appUserService.updatePhoto(id, file)
+        return ResponseEntity.noContent().build()
     }
 
+    /* =========================
+       ATUALIZAR USUÁRIO
+       ========================= */
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('OWNER','ADMIN')")

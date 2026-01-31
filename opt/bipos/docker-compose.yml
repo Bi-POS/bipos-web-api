@@ -1,0 +1,13 @@
+version: "3.9"
+
+services:
+  web-api:
+    image: bipos-web-api:latest
+    container_name: bipos-web-api
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+    volumes:
+      - /var/www/bipos/uploads:/var/www/bipos/uploads
+    restart: always

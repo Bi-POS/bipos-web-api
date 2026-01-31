@@ -34,12 +34,6 @@ class CompanyController(
     fun get(@PathVariable id: UUID): ResponseEntity<CompanyDTO> =
         ResponseEntity.ok(companyService.getById(id))
 
-    @DeleteMapping("/{id}")
-    fun delete(@PathVariable id: UUID): ResponseEntity<Void> {
-        companyService.delete(id)
-        return ResponseEntity.noContent().build()
-    }
-
     @GetMapping("/me")
     fun me(): ResponseEntity<CompanyDTO> {
         val companyId = SecurityUtils.getCompanyId()
@@ -52,25 +46,12 @@ class CompanyController(
         @RequestParam("file") file: MultipartFile
     ): ResponseEntity<Void> {
         companyService.updateLogo(id, file)
-
-        return ResponseEntity.noContent()
-            .header(HttpHeaders.CACHE_CONTROL, "no-cache, no-store, must-revalidate")
-            .header(HttpHeaders.PRAGMA, "no-cache")
-            .header(HttpHeaders.EXPIRES, "0")
-            .build()
+        return ResponseEntity.noContent().build()
     }
 
-    @GetMapping("/{id}/logo")
-    fun getLogo(@PathVariable id: UUID): ResponseEntity<Resource> {
-
-        val resource = companyService.loadLogo(id)
-            ?: return ResponseEntity.notFound().build()
-
-        return ResponseEntity.ok()
-            .header(HttpHeaders.CACHE_CONTROL, "no-cache, no-store, must-revalidate")
-            .header(HttpHeaders.PRAGMA, "no-cache")
-            .header(HttpHeaders.EXPIRES, "0")
-            .contentType(MediaType.IMAGE_PNG)
-            .body(resource)
+    @DeleteMapping("/{id}")
+    fun delete(@PathVariable id: UUID): ResponseEntity<Void> {
+        companyService.delete(id)
+        return ResponseEntity.noContent().build()
     }
 }

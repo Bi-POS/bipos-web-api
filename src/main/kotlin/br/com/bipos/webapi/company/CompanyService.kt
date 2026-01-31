@@ -31,6 +31,8 @@ class CompanyService(
     private val appUserRepository: AppUserRepository,
     private val passwordEncoder: PasswordEncoder
 ) {
+    private val uploadBaseDir = Paths.get("/var/www/bipos/uploads/logos")
+    private val publicBasePath = "/uploads/logos"
 
     @Transactional
     fun create(dto: CompanyCreateDTO): CompanyDTO {
@@ -119,30 +121,22 @@ class CompanyService(
 
         val fileName = "company-$companyId.$extension"
 
-        val uploadDir = Paths.get("uploads/logos")
-        Files.createDirectories(uploadDir)
+        // 📁 PATH FÍSICO (onde o arquivo vai existir)
+        Files.createDirectories(uploadBaseDir)
+        val physicalPath = uploadBaseDir.resolve(fileName)
 
-        val filePath = uploadDir.resolve(fileName)
-        Files.copy(file.inputStream, filePath, StandardCopyOption.REPLACE_EXISTING)
+        Files.copy(
+            file.inputStream,
+            physicalPath,
+            StandardCopyOption.REPLACE_EXISTING
+        )
 
         val company = companyRepository.findById(companyId)
             .orElseThrow { RuntimeException("Empresa não encontrada") }
 
-        // ✅ salva APENAS o path
-        company.logoUrl = filePath.toString()
+        // 🌍 PATH PÚBLICO (o que vai para o banco)
+        company.logoUrl = "$publicBasePath/$fileName"
 
         companyRepository.save(company)
-    }
-
-    fun loadLogo(companyId: UUID): Resource? {
-        val company = companyRepository.findById(companyId)
-            .orElseThrow { IllegalArgumentException("Empresa não encontrada") }
-
-        val logoPath = company.logoUrl ?: return null
-
-        val path = Paths.get(logoPath)
-        if (!Files.exists(path)) return null
-
-        return UrlResource(path.toUri())
     }
 }

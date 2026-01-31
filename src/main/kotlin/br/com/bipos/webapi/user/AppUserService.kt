@@ -25,6 +25,9 @@ class AppUserService(
     private val companyRepository: CompanyRepository,
     private val passwordEncoder: PasswordEncoder
 ) {
+    private val userUploadBaseDir = Paths.get("/var/www/bipos/uploads/users")
+    private val publicUserBasePath = "/uploads/users"
+
     /* =========================
        CREATE
        ========================= */
@@ -79,6 +82,7 @@ class AppUserService(
         appUserRepository.save(user).toDTO()
     }
 
+    @Transactional
     fun updatePhoto(userId: UUID, file: MultipartFile) {
 
         if (file.isEmpty) {
@@ -94,17 +98,20 @@ class AppUserService(
 
         val fileName = "user-$userId.$extension"
 
-        val uploadDir = Paths.get("uploads/users")
-        Files.createDirectories(uploadDir)
+        Files.createDirectories(userUploadBaseDir)
+        val physicalPath = userUploadBaseDir.resolve(fileName)
 
-        val filePath = uploadDir.resolve(fileName)
-        Files.copy(file.inputStream, filePath, StandardCopyOption.REPLACE_EXISTING)
+        Files.copy(
+            file.inputStream,
+            physicalPath,
+            StandardCopyOption.REPLACE_EXISTING
+        )
 
         val user = appUserRepository.findById(userId)
-            .orElseThrow { RuntimeException("Usuário não encontrada") }
+            .orElseThrow { RuntimeException("Usuário não encontrado") }
 
-        // ✅ salva APENAS o path
-        user.photoUrl = filePath.toString()
+        // 🌍 PATH PÚBLICO (vai pro banco)
+        user.photoUrl = "$publicUserBasePath/$fileName"
 
         appUserRepository.save(user)
     }
@@ -143,17 +150,4 @@ class AppUserService(
         appUserRepository
             .findAllByCompanyIdAndRoleNot(companyId, UserRole.OWNER)
             .map { it.toDTO() }
-
-    fun loadPhoto(userId: UUID): Resource? {
-        val user = appUserRepository.findById(userId)
-            .orElseThrow { IllegalArgumentException("Empresa não encontrada") }
-
-        val logoPath = user.photoUrl ?: return null
-
-        val path = Paths.get(logoPath)
-        if (!Files.exists(path)) return null
-
-        return UrlResource(path.toUri())
-    }
-
 }
