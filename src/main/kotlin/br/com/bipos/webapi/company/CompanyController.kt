@@ -60,7 +60,7 @@ class CompanyController(
     @GetMapping("/{id}/logo")
     fun getLogo(@PathVariable id: UUID): ResponseEntity<Resource> {
 
-        val path = Paths.get("/app/uploads/logos/company-$id.png")
+        val path = Paths.get("/var/www/bipos/uploads/logos/company-$id.png")
 
         if (!Files.exists(path)) {
             return ResponseEntity.notFound().build()
