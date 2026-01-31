@@ -125,7 +125,7 @@ class CompanyService(
             RequestBody.fromInputStream(file.inputStream, file.size)
         )
 
-        val url = "${spacesProperties.bucket}/$key"
+        val url = "${spacesProperties.cdn}/$key"
 
         val company = companyRepository.findById(companyId)
             .orElseThrow { RuntimeException("Empresa não encontrada") }
