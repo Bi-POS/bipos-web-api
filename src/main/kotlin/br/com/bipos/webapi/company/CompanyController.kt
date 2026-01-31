@@ -4,9 +4,6 @@ import br.com.bipos.webapi.company.dto.CompanyCreateDTO
 import br.com.bipos.webapi.company.dto.CompanyDTO
 import br.com.bipos.webapi.security.SecurityUtils
 import jakarta.validation.Valid
-import org.springframework.core.io.Resource
-import org.springframework.http.HttpHeaders
-import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile

@@ -84,7 +84,7 @@ class CompanyService(
     fun list(): List<CompanyDTO> =
         companyRepository.findAll().map(::toDTO)
 
-    fun getById(id: UUID): CompanyDTO =
+    fun getById(id: UUID?): CompanyDTO =
         companyRepository.findById(id)
             .orElseThrow { IllegalArgumentException("Empresa não encontrada") }
             .let(::toDTO)
