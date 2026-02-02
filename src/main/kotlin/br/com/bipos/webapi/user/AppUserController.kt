@@ -9,6 +9,7 @@ import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.server.ResponseStatusException
@@ -53,10 +54,10 @@ class UserController(
     @PreAuthorize("hasAnyRole('OWNER','ADMIN')")
     fun create(
         @Valid @RequestBody dto: UserCreateDTO,
-        @CurrentUser user: AppUser?
+        @AuthenticationPrincipal details: AppUserDetails?
     ): ResponseEntity<UserResponseDTO> {
 
-        val currentUser = user
+        val currentUser = details?.user
             ?: throw ResponseStatusException(
                 HttpStatus.UNAUTHORIZED,
                 "Usuário não autenticado"

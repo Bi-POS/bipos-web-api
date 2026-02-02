@@ -1,6 +1,7 @@
 package br.com.bipos.webapi.security.auth.response
 
 import br.com.bipos.webapi.security.auth.JwtService
+import br.com.bipos.webapi.user.AppUserDetailsService
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -15,7 +16,7 @@ import org.springframework.web.filter.OncePerRequestFilter
 @Component
 class JwtAuthFilter(
     private val jwtService: JwtService,
-    private val userDetailsService: UserDetailsService
+    private val userDetailsService: AppUserDetailsService
 ) : OncePerRequestFilter() {
 
     override fun shouldNotFilter(request: HttpServletRequest): Boolean {
@@ -48,7 +49,7 @@ class JwtAuthFilter(
 
                 if (jwtService.isTokenValid(token, userDetails)) {
                     val authToken = UsernamePasswordAuthenticationToken(
-                        userDetails,
+                        userDetails,                // 👈 AppUserDetails
                         null,
                         userDetails.authorities
                     )
@@ -57,10 +58,12 @@ class JwtAuthFilter(
                         WebAuthenticationDetailsSource()
                             .buildDetails(request)
 
-                    SecurityContextHolder.getContext().authentication = authToken
+                    SecurityContextHolder
+                        .getContext()
+                        .authentication = authToken
                 }
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
             SecurityContextHolder.clearContext()
         }
 
