@@ -21,14 +21,30 @@ class UserController(
     private val appUserService: AppUserService
 ) {
 
+    /* =========================
+       BUSCAR USUÁRIO POR ID
+       ========================= */
+
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('OWNER','ADMIN','MANAGER','OPERATOR')")
     fun getById(
         @PathVariable id: UUID,
-        @CurrentUser currentUser: AppUser
+        @AuthenticationPrincipal details: AppUserDetails?
     ): ResponseEntity<UserResponseDTO> {
 
-        val user = appUserService.getById(id, currentUser.company?.id)
+        val currentUser = details?.user
+            ?: throw ResponseStatusException(
+                HttpStatus.UNAUTHORIZED,
+                "Usuário não autenticado"
+            )
+
+        val companyId = currentUser.company?.id
+            ?: throw ResponseStatusException(
+                HttpStatus.FORBIDDEN,
+                "Usuário sem empresa vinculada"
+            )
+
+        val user = appUserService.getById(id, companyId)
         return ResponseEntity.ok(user)
     }
 
@@ -39,10 +55,22 @@ class UserController(
     @GetMapping
     @PreAuthorize("hasAnyRole('OWNER','ADMIN','MANAGER')")
     fun list(
-        @CurrentUser user: AppUser
+        @AuthenticationPrincipal details: AppUserDetails?
     ): ResponseEntity<List<UserResponseDTO>> {
 
-        val users = appUserService.list(user.company?.id)
+        val currentUser = details?.user
+            ?: throw ResponseStatusException(
+                HttpStatus.UNAUTHORIZED,
+                "Usuário não autenticado"
+            )
+
+        val companyId = currentUser.company?.id
+            ?: throw ResponseStatusException(
+                HttpStatus.FORBIDDEN,
+                "Usuário sem empresa vinculada"
+            )
+
+        val users = appUserService.list(companyId)
         return ResponseEntity.ok(users)
     }
 
@@ -97,10 +125,22 @@ class UserController(
     fun update(
         @PathVariable id: UUID,
         @Valid @RequestBody dto: UserUpdateDTO,
-        @CurrentUser user: AppUser
+        @AuthenticationPrincipal details: AppUserDetails?
     ): ResponseEntity<UserResponseDTO> {
 
-        val updated = appUserService.update(id, dto, user.company?.id)
+        val currentUser = details?.user
+            ?: throw ResponseStatusException(
+                HttpStatus.UNAUTHORIZED,
+                "Usuário não autenticado"
+            )
+
+        val companyId = currentUser.company?.id
+            ?: throw ResponseStatusException(
+                HttpStatus.FORBIDDEN,
+                "Usuário sem empresa vinculada"
+            )
+
+        val updated = appUserService.update(id, dto, companyId)
         return ResponseEntity.ok(updated)
     }
 
@@ -112,10 +152,22 @@ class UserController(
     @PreAuthorize("hasRole('OWNER')")
     fun delete(
         @PathVariable id: UUID,
-        @CurrentUser user: AppUser
+        @AuthenticationPrincipal details: AppUserDetails?
     ): ResponseEntity<Void> {
 
-        appUserService.delete(id, user.company?.id)
+        val currentUser = details?.user
+            ?: throw ResponseStatusException(
+                HttpStatus.UNAUTHORIZED,
+                "Usuário não autenticado"
+            )
+
+        val companyId = currentUser.company?.id
+            ?: throw ResponseStatusException(
+                HttpStatus.FORBIDDEN,
+                "Usuário sem empresa vinculada"
+            )
+
+        appUserService.delete(id, companyId)
         return ResponseEntity.noContent().build()
     }
 }
