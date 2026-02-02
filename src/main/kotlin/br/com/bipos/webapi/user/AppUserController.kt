@@ -1,16 +1,17 @@
 package br.com.bipos.webapi.user
 
+import br.com.bipos.webapi.domain.user.AppUser
+import br.com.bipos.webapi.security.CurrentUser
 import br.com.bipos.webapi.user.dto.UserCreateDTO
 import br.com.bipos.webapi.user.dto.UserResponseDTO
 import br.com.bipos.webapi.user.dto.UserUpdateDTO
-import br.com.bipos.webapi.domain.user.AppUser
-import br.com.bipos.webapi.security.CurrentUser
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
+import org.springframework.web.server.ResponseStatusException
 import java.util.*
 
 @RestController
@@ -52,10 +53,22 @@ class UserController(
     @PreAuthorize("hasAnyRole('OWNER','ADMIN')")
     fun create(
         @Valid @RequestBody dto: UserCreateDTO,
-        @CurrentUser user: AppUser
+        @CurrentUser user: AppUser?
     ): ResponseEntity<UserResponseDTO> {
 
-        val created = appUserService.create(dto, user.company?.id)
+        val currentUser = user
+            ?: throw ResponseStatusException(
+                HttpStatus.UNAUTHORIZED,
+                "Usuário não autenticado"
+            )
+
+        val companyId = currentUser.company?.id
+            ?: throw ResponseStatusException(
+                HttpStatus.FORBIDDEN,
+                "Usuário sem empresa vinculada"
+            )
+
+        val created = appUserService.create(dto, companyId)
         return ResponseEntity.status(HttpStatus.CREATED).body(created)
     }
 

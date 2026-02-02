@@ -1,21 +1,23 @@
 package br.com.bipos.webapi.user
 
-import br.com.bipos.webapi.user.dto.UserCreateDTO
-import br.com.bipos.webapi.user.dto.UserUpdateDTO
-import br.com.bipos.webapi.user.mapper.toDTO
+import br.com.bipos.webapi.company.CompanyRepository
 import br.com.bipos.webapi.domain.user.AppUser
 import br.com.bipos.webapi.domain.user.UserRole
-import br.com.bipos.webapi.company.CompanyRepository
+import br.com.bipos.webapi.user.dto.UserCreateDTO
+import br.com.bipos.webapi.user.dto.UserResponseDTO
+import br.com.bipos.webapi.user.dto.UserUpdateDTO
+import br.com.bipos.webapi.user.mapper.toDTO
+import org.springframework.http.HttpStatus
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
+import org.springframework.web.server.ResponseStatusException
 import java.nio.file.AccessDeniedException
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
 import java.util.*
-import kotlin.collections.map
 
 @Service
 class AppUserService(
@@ -33,15 +35,30 @@ class AppUserService(
     @Transactional
     fun create(
         dto: UserCreateDTO,
-        companyId: UUID?
-    ) = run {
+        companyId: UUID
+    ): UserResponseDTO {
+
+        if (dto.password.isBlank()) {
+            throw ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "Senha é obrigatória"
+            )
+        }
 
         if (appUserRepository.existsByEmail(dto.email)) {
-            throw IllegalArgumentException("E-mail já cadastrado")
+            throw ResponseStatusException(
+                HttpStatus.CONFLICT,
+                "E-mail já cadastrado"
+            )
         }
 
         val company = companyRepository.findById(companyId)
-            .orElseThrow { IllegalArgumentException("Empresa não encontrada") }
+            .orElseThrow {
+                ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Empresa não encontrada"
+                )
+            }
 
         val user = AppUser(
             name = dto.name.trim(),
@@ -52,8 +69,9 @@ class AppUserService(
             active = true
         )
 
-        appUserRepository.save(user).toDTO()
+        return appUserRepository.save(user).toDTO()
     }
+
 
     /* =========================
        UPDATE
