@@ -110,10 +110,10 @@ class UserController(
     fun updatePhoto(
         @PathVariable id: UUID,
         @RequestParam("file") file: MultipartFile
-    ): ResponseEntity<Void> {
+    ): ResponseEntity<UserResponseDTO> {
 
-        appUserService.updatePhoto(id, file)
-        return ResponseEntity.noContent().build()
+        val updatedUser = appUserService.updatePhoto(id, file)
+        return ResponseEntity.ok(updatedUser)
     }
 
     /* =========================

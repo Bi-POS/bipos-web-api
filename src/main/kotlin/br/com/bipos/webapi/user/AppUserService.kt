@@ -108,7 +108,7 @@ class AppUserService(
     }
 
     @Transactional
-    fun updatePhoto(userId: UUID, file: MultipartFile) {
+    fun updatePhoto(userId: UUID, file: MultipartFile): UserResponseDTO {
 
         if (file.isEmpty || !file.contentType.orEmpty().startsWith("image")) {
             throw ResponseStatusException(
@@ -144,7 +144,8 @@ class AppUserService(
 
         user.photoUrl = url
         user.updatePhotoAt = Instant.now()
-        appUserRepository.save(user)
+
+        return appUserRepository.save(user).toDTO()
     }
 
 
