@@ -1,6 +1,7 @@
 package br.com.bipos.webapi.company.dto
 
 import br.com.bipos.webapi.domain.utils.DocumentType
+import java.time.Instant
 import java.util.*
 
 data class CompanyDTO(
@@ -11,5 +12,6 @@ data class CompanyDTO(
     val documentType: DocumentType,
     val phone: String,
     val logoUrl: String?,
+    val updateLogoAt: Instant,
     val status: String
 )

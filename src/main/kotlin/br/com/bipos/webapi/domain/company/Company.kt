@@ -6,6 +6,7 @@ import jakarta.persistence.*
 import jakarta.validation.constraints.Email
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Pattern
+import java.time.Instant
 import java.util.*
 
 @Entity
@@ -29,6 +30,8 @@ data class Company(
 
     @Column(nullable = true)
     var logoUrl: String? = null,
+
+    var updateLogoAt: Instant = Instant.now(),
 
     @OneToMany(
         mappedBy = "company",

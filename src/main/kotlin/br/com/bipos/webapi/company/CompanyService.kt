@@ -22,6 +22,7 @@ import software.amazon.awssdk.core.sync.RequestBody
 import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.model.ObjectCannedACL
 import software.amazon.awssdk.services.s3.model.PutObjectRequest
+import java.time.Instant
 import java.util.*
 
 @Service
@@ -104,14 +105,9 @@ class CompanyService(
         documentType = company.documentType,
         phone = company.phone,
         logoUrl = company.logoUrl,
+        updateLogoAt = company.updateLogoAt,
         status = company.status.name
     )
-
-    @PostConstruct
-    fun debugSpaces() {
-        println("🪣 bucket = ${spacesProperties.bucket}")
-        println("🌍 cdn = ${spacesProperties.cdn}")
-    }
     
     fun updateLogo(companyId: UUID, file: MultipartFile) {
 
@@ -138,6 +134,8 @@ class CompanyService(
             .orElseThrow { RuntimeException("Empresa não encontrada") }
 
         company.logoUrl = url
+        company.updateLogoAt = Instant.now()
+
         companyRepository.save(company)
     }
 }

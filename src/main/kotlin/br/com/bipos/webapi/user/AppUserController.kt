@@ -1,7 +1,5 @@
 package br.com.bipos.webapi.user
 
-import br.com.bipos.webapi.domain.user.AppUser
-import br.com.bipos.webapi.security.CurrentUser
 import br.com.bipos.webapi.user.dto.UserCreateDTO
 import br.com.bipos.webapi.user.dto.UserResponseDTO
 import br.com.bipos.webapi.user.dto.UserUpdateDTO
