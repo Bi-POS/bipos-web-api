@@ -97,7 +97,7 @@ class CompanyService(
     }
 
     private fun toDTO(company: Company) = CompanyDTO(
-        id = company.id!!,
+        id = company.id,
         name = company.name,
         email = company.email,
         document = company.document,

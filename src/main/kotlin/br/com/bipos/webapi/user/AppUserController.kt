@@ -6,10 +6,7 @@ import br.com.bipos.webapi.user.dto.UserUpdateDTO
 import br.com.bipos.webapi.domain.user.AppUser
 import br.com.bipos.webapi.security.CurrentUser
 import jakarta.validation.Valid
-import org.springframework.core.io.Resource
-import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
@@ -29,7 +26,7 @@ class UserController(
         @CurrentUser currentUser: AppUser
     ): ResponseEntity<UserResponseDTO> {
 
-        val user = appUserService.getById(id, currentUser.company?.id!!)
+        val user = appUserService.getById(id, currentUser.company?.id)
         return ResponseEntity.ok(user)
     }
 
@@ -43,7 +40,7 @@ class UserController(
         @CurrentUser user: AppUser
     ): ResponseEntity<List<UserResponseDTO>> {
 
-        val users = appUserService.list(user.company?.id!!)
+        val users = appUserService.list(user.company?.id)
         return ResponseEntity.ok(users)
     }
 
@@ -58,7 +55,7 @@ class UserController(
         @CurrentUser user: AppUser
     ): ResponseEntity<UserResponseDTO> {
 
-        val created = appUserService.create(dto, user.company?.id!!)
+        val created = appUserService.create(dto, user.company?.id)
         return ResponseEntity.status(HttpStatus.CREATED).body(created)
     }
 
@@ -89,7 +86,7 @@ class UserController(
         @CurrentUser user: AppUser
     ): ResponseEntity<UserResponseDTO> {
 
-        val updated = appUserService.update(id, dto, user.company?.id!!)
+        val updated = appUserService.update(id, dto, user.company?.id)
         return ResponseEntity.ok(updated)
     }
 
@@ -104,7 +101,7 @@ class UserController(
         @CurrentUser user: AppUser
     ): ResponseEntity<Void> {
 
-        appUserService.delete(id, user.company?.id!!)
+        appUserService.delete(id, user.company?.id)
         return ResponseEntity.noContent().build()
     }
 }

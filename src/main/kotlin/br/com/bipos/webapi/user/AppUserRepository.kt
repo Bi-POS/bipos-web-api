@@ -14,11 +14,11 @@ interface AppUserRepository : JpaRepository<AppUser, UUID> {
 
     fun findByIdAndCompanyId(
         id: UUID,
-        companyId: UUID
+        companyId: UUID?
     ): AppUser?
 
     fun findAllByCompanyIdAndRoleNot(
-        companyId: UUID,
+        companyId: UUID?,
         role: UserRole
     ): List<AppUser>
 }

@@ -6,8 +6,6 @@ import br.com.bipos.webapi.user.mapper.toDTO
 import br.com.bipos.webapi.domain.user.AppUser
 import br.com.bipos.webapi.domain.user.UserRole
 import br.com.bipos.webapi.company.CompanyRepository
-import org.springframework.core.io.Resource
-import org.springframework.core.io.UrlResource
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -35,7 +33,7 @@ class AppUserService(
     @Transactional
     fun create(
         dto: UserCreateDTO,
-        companyId: UUID
+        companyId: UUID?
     ) = run {
 
         if (appUserRepository.existsByEmail(dto.email)) {
@@ -65,7 +63,7 @@ class AppUserService(
     fun update(
         userId: UUID,
         dto: UserUpdateDTO,
-        companyId: UUID
+        companyId: UUID?
     ) = run {
 
         val user = appUserRepository.findByIdAndCompanyId(userId, companyId)
@@ -124,7 +122,7 @@ class AppUserService(
     @Transactional
     fun delete(
         userId: UUID,
-        companyId: UUID
+        companyId: UUID?
     ) {
         val user = appUserRepository.findByIdAndCompanyId(userId, companyId)
             ?: throw IllegalArgumentException("Usuário não encontrado")
@@ -137,7 +135,7 @@ class AppUserService(
 
     fun getById(
         userId: UUID,
-        companyId: UUID
+        companyId: UUID?
     ) = appUserRepository.findByIdAndCompanyId(userId, companyId)
         ?.toDTO()
         ?: throw IllegalArgumentException("Usuário não encontrado")
@@ -146,7 +144,7 @@ class AppUserService(
        LIST
        ========================= */
 
-    fun list(companyId: UUID) =
+    fun list(companyId: UUID?) =
         appUserRepository
             .findAllByCompanyIdAndRoleNot(companyId, UserRole.OWNER)
             .map { it.toDTO() }
