@@ -3,6 +3,7 @@ package br.com.bipos.webapi.domain.user
 
 import br.com.bipos.webapi.domain.company.Company
 import jakarta.persistence.*
+import java.time.Instant
 import java.time.LocalDateTime
 import java.util.*
 
@@ -35,6 +36,8 @@ class AppUser(
     var active: Boolean = true,
 
     var photoUrl: String? = null,
+
+    var updatePhotoAt: Instant = Instant.now(),
 
     @Column(nullable = false)
     var createdAt: LocalDateTime = LocalDateTime.now()

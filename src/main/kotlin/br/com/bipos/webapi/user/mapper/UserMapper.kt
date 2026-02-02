@@ -10,5 +10,6 @@ fun AppUser.toDTO() = UserResponseDTO(
     role = this.role,
     active = this.active,
     photoUrl = photoUrl,
+    updatePhotoAt = this.updatePhotoAt,
     createdAt = this.createdAt
 )

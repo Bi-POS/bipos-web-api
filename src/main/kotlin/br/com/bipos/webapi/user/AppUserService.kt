@@ -18,10 +18,8 @@ import software.amazon.awssdk.core.sync.RequestBody
 import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.model.ObjectCannedACL
 import software.amazon.awssdk.services.s3.model.PutObjectRequest
-import java.nio.file.AccessDeniedException
-import java.nio.file.Files
-import java.nio.file.Paths
-import java.nio.file.StandardCopyOption
+import java.time.Instant
+import java.time.LocalDateTime
 import java.util.*
 
 @Service
@@ -145,6 +143,7 @@ class AppUserService(
             }
 
         user.photoUrl = url
+        user.updatePhotoAt = Instant.now()
         appUserRepository.save(user)
     }
 
