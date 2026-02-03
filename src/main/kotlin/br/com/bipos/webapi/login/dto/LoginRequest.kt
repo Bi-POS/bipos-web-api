@@ -1,4 +1,4 @@
-package br.com.bipos.webapi.login.request
+package br.com.bipos.webapi.login.dto
 
 import jakarta.validation.constraints.NotBlank
 
