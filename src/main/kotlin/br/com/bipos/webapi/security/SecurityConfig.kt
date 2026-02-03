@@ -43,6 +43,8 @@ open class SecurityConfig(private val jwtAuthFilter: JwtAuthFilter) {
 
             .authorizeHttpRequests { auth ->
 
+                auth.requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
+
                 auth.requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
 
                 auth.requestMatchers("/uploads/**").permitAll()
