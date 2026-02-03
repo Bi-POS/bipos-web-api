@@ -15,13 +15,14 @@ class QrController(
     private val smartPosLoginTokenService: SmartPosLoginTokenService
 ) {
 
+
     @PostMapping("/smartpos/qrcode")
     fun generateQr(
         @Valid @RequestBody request: QrRequest,
         authentication: Authentication
     ): QrResponse {
 
-        val userId = authentication.name
+        val userId = authentication.principal as String
 
         return smartPosLoginTokenService.generateQrToken(
             userId = userId,

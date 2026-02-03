@@ -1,6 +1,7 @@
 package br.com.bipos.webapi.security.auth.response
 
 import br.com.bipos.webapi.security.auth.JwtService
+import br.com.bipos.webapi.user.AppUserDetails
 import br.com.bipos.webapi.user.AppUserDetailsService
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
@@ -45,11 +46,12 @@ class JwtAuthFilter(
                 SecurityContextHolder.getContext().authentication == null
             ) {
                 val userDetails =
-                    userDetailsService.loadUserByUsername(username)
+                    userDetailsService.loadUserByUsername(username) as AppUserDetails
+
 
                 if (jwtService.isTokenValid(token, userDetails)) {
                     val authToken = UsernamePasswordAuthenticationToken(
-                        userDetails,                // 👈 AppUserDetails
+                        userDetails.id.toString(),
                         null,
                         userDetails.authorities
                     )

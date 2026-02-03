@@ -4,10 +4,13 @@ import br.com.bipos.webapi.domain.user.AppUser
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
+import java.util.*
 
 class AppUserDetails(
     val user: AppUser
 ) : UserDetails {
+
+    val id: UUID? = user.id
 
     override fun getUsername(): String = user.email
 
