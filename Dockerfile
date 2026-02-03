@@ -26,13 +26,4 @@ EXPOSE 8080
 ENV SPRING_PROFILES_ACTIVE=prod
 ENV TZ=America/Sao_Paulo
 
-ENTRYPOINT [
-  "java",
-  "-XX:+UseContainerSupport",
-  "-XX:+UseG1GC",
-  "-XX:MaxRAMPercentage=75",
-  "-Djava.security.egd=file:/dev/./urandom",
-  "-Dspring.profiles.active=prod",
-  "-jar",
-  "app.jar"
-]
+ENTRYPOINT ["java","-XX:+UseContainerSupport","-XX:+UseG1GC","-XX:MaxRAMPercentage=75","-Djava.security.egd=file:/dev/./urandom","-Dspring.profiles.active=prod","-jar","app.jar"]
