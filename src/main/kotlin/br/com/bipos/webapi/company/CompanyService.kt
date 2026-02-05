@@ -13,7 +13,6 @@ import br.com.bipos.webapi.domain.utils.DocumentType
 import br.com.bipos.webapi.init.SpacesProperties
 import br.com.bipos.webapi.module.ModuleRepository
 import br.com.bipos.webapi.user.AppUserRepository
-import jakarta.annotation.PostConstruct
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional

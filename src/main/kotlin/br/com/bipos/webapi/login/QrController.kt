@@ -2,8 +2,8 @@ package br.com.bipos.webapi.login
 
 import br.com.bipos.webapi.login.dto.QrRequest
 import br.com.bipos.webapi.login.dto.QrResponse
-import jakarta.validation.Valid
-import org.springframework.security.core.Authentication
+import br.com.bipos.webapi.user.AppUserDetails
+import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
@@ -18,14 +18,13 @@ class QrController(
 
     @PostMapping("/smartpos/qrcode")
     fun generateQr(
-        @Valid @RequestBody request: QrRequest,
-        authentication: Authentication
+        @RequestBody request: QrRequest,
+        @AuthenticationPrincipal user: AppUserDetails
     ): QrResponse {
 
-        val userId = authentication.principal as String
-
         return smartPosLoginTokenService.generateQrToken(
-            userId = userId,
+            userId = user.id.toString(),
+            userName = user.username,
             companyId = request.companyId
         )
     }

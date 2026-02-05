@@ -16,7 +16,7 @@ class AppUser(
     var id: UUID? = null,
 
     @Column(nullable = false)
-    var name: String = "",
+    var name: String? = "",
 
     @Column(nullable = false, unique = true)
     var email: String = "",

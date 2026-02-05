@@ -7,11 +7,11 @@ import java.util.*
 
 data class UserResponseDTO(
     val id: UUID?,
-    val name: String,
+    val name: String?,
     val email: String,
     val role: UserRole,
     val active: Boolean,
     val photoUrl: String?,
-    val updatePhotoAt: Instant,
+    val updatePhotoAt: Instant?,
     val createdAt: LocalDateTime
 )

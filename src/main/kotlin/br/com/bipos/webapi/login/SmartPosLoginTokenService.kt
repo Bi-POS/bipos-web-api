@@ -21,6 +21,7 @@ class SmartPosLoginTokenService(
     @Transactional
     fun generateQrToken(
         userId: String,
+        userName: String,
         companyId: String
     ): QrResponse {
 

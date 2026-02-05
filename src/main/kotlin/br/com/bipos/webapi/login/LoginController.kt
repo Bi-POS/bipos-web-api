@@ -16,7 +16,6 @@ class LoginController(private val authService: AuthService) {
     @PostMapping("/login")
     fun login(@RequestBody @Valid req: LoginRequest): ResponseEntity<AuthResponse> {
         val token = authService.login(req.useremail, req.password)
-            ?: throw UnauthorizedUserException("Credenciais inválidas para o usuário '${req.useremail}'")
         return ResponseEntity.ok(AuthResponse(token))
     }
 }

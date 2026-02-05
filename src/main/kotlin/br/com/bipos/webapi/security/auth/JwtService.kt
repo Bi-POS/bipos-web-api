@@ -4,7 +4,6 @@ import br.com.bipos.webapi.domain.user.AppUser
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
-import io.jsonwebtoken.io.Decoders
 import io.jsonwebtoken.security.Keys
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.security.core.userdetails.UserDetails
@@ -24,7 +23,7 @@ class JwtService(
 
     private val key: Key by lazy {
         Keys.hmacShaKeyFor(
-            Decoders.BASE64.decode(secret)
+            secret.toByteArray(Charsets.UTF_8)
         )
     }
 
@@ -43,6 +42,7 @@ class JwtService(
 
         val claims = Jwts.claims().setSubject(user.email)
         claims["userId"] = user.id.toString()
+        claims["userName"] = user.name
         claims["companyId"] = user.company?.id.toString()
         claims["role"] = user.role.name
         claims["modules"] = user.company?.modules?.map { it.module?.name }
