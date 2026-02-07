@@ -1,16 +1,14 @@
 package br.com.bipos.webapi.domain.login
 
-import jakarta.persistence.*
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.Id
+import jakarta.persistence.Table
 import java.time.Instant
+import java.util.*
 
 @Entity
-@Table(
-    name = "smartpos_login_tokens",
-    indexes = [
-        Index(name = "idx_smartpos_token_expires", columnList = "expiresAt"),
-        Index(name = "idx_smartpos_token_used", columnList = "used")
-    ]
-)
+@Table(name = "smartpos_qr_tokens")
 class SmartPosLoginToken(
 
     @Id
@@ -18,10 +16,10 @@ class SmartPosLoginToken(
     val token: String,
 
     @Column(nullable = false)
-    val userId: String,
+    val userId: UUID,
 
     @Column(nullable = false)
-    val companyId: String,
+    val companyId: UUID,
 
     @Column(nullable = false)
     val expiresAt: Instant,
@@ -32,3 +30,4 @@ class SmartPosLoginToken(
     @Column(nullable = false, updatable = false)
     val createdAt: Instant = Instant.now()
 )
+

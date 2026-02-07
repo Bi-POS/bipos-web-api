@@ -24,7 +24,6 @@ class QrController(
 
         return smartPosLoginTokenService.generateQrToken(
             userId = user.id.toString(),
-            userName = user.username,
             companyId = request.companyId
         )
     }

@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import java.time.Instant
+import java.util.*
 
 interface SmartPosLoginTokenRepository :
     JpaRepository<SmartPosLoginToken, String> {
@@ -12,18 +13,21 @@ interface SmartPosLoginTokenRepository :
     fun findByTokenAndUsedFalse(token: String): SmartPosLoginToken?
 
     fun deleteByExpiresAtBefore(now: Instant)
+
     @Modifying
-    @Query("""
-        update SmartPosLoginToken t
-           set t.used = true
-         where t.userId = :userId
-           and t.companyId = :companyId
-           and t.used = false
-           and t.expiresAt > :now
-    """)
+    @Query(
+        """
+    update SmartPosLoginToken t
+       set t.used = true
+     where t.userId = :userId
+       and t.companyId = :companyId
+       and t.used = false
+       and t.expiresAt > :now
+"""
+    )
     fun invalidateActiveTokens(
-        userId: String,
-        companyId: String,
+        userId: UUID,
+        companyId: UUID,
         now: Instant
     )
 }
