@@ -1,7 +1,7 @@
 package br.com.bipos.webapi.domain.catalog
 
-import br.com.bipos.webapi.sale.SaleStatus
 import br.com.bipos.webapi.domain.company.Company
+import br.com.bipos.webapi.sale.SaleStatus
 import jakarta.persistence.*
 import java.math.BigDecimal
 import java.time.LocalDateTime

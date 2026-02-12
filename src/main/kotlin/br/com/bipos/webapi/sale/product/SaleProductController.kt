@@ -11,30 +11,55 @@ import java.util.*
 
 @CrossOrigin(origins = ["http://localhost:5173"])
 @RestController
-@RequestMapping("/sale/groups/{groupId}/products")
+@RequestMapping("/sale")
 class SaleProductController(
     private val saleProductService: SaleProductService
 ) {
 
-    @PostMapping
+    @GetMapping("/products/all")
+    fun getAllProductsByCompany(): ResponseEntity<List<Map<String, Any>>> {
+        val companyId = SecurityUtils.getCompanyId()
+
+        val products = saleProductService.listAll(companyId)
+
+        val response = products.map { productDTO ->
+            mapOf(
+                "productId" to productDTO.id,
+                "productName" to productDTO.name,
+                "price" to productDTO.price,
+                "unitType" to productDTO.unitType.name,
+                "imageUrl" to productDTO.imageUrl,
+                "groupId" to productDTO.groupId
+            )
+        }
+
+        return ResponseEntity.ok(response) as ResponseEntity<List<Map<String, Any>>>
+    }
+
+    // ============= ENDPOINTS EXISTENTES =============
+    @PostMapping("/groups/{groupId}/products")
     fun create(
-        @PathVariable groupId: UUID, @Valid @RequestBody dto: SaleProductCreateDTO
+        @PathVariable groupId: UUID,
+        @Valid @RequestBody dto: SaleProductCreateDTO
     ): ResponseEntity<SaleProductDTO> = ResponseEntity.status(HttpStatus.CREATED)
         .body(saleProductService.create(SecurityUtils.getCompanyId(), groupId, dto))
 
-    @GetMapping
+    @GetMapping("/groups/{groupId}/products")
     fun list(
         @PathVariable groupId: UUID
     ): List<SaleProductDTO> = saleProductService.list(SecurityUtils.getCompanyId(), groupId)
 
-    @PutMapping("/{productId}")
+    @PutMapping("/groups/{groupId}/products/{productId}")
     fun update(
-        @PathVariable groupId: UUID, @PathVariable productId: UUID, @Valid @RequestBody dto: SaleProductCreateDTO
+        @PathVariable groupId: UUID,
+        @PathVariable productId: UUID,
+        @Valid @RequestBody dto: SaleProductCreateDTO
     ): SaleProductDTO = saleProductService.update(SecurityUtils.getCompanyId(), groupId, productId, dto)
 
-    @DeleteMapping("/{productId}")
+    @DeleteMapping("/groups/{groupId}/products/{productId}")
     fun delete(
-        @PathVariable groupId: UUID, @PathVariable productId: UUID
+        @PathVariable groupId: UUID,
+        @PathVariable productId: UUID
     ) {
         saleProductService.delete(SecurityUtils.getCompanyId(), groupId, productId)
     }
