@@ -1,0 +1,156 @@
+// possettings/SmartPosSettingsService.kt
+package br.com.bipos.webapi.possettings
+
+import br.com.bipos.webapi.company.CompanyRepository
+import br.com.bipos.webapi.companymodule.CompanyModuleDto
+import br.com.bipos.webapi.companymodule.toDto
+import br.com.bipos.webapi.domain.settings.SmartPosPrint
+import br.com.bipos.webapi.domain.settings.SmartPosSettings
+import br.com.bipos.webapi.exception.BusinessException
+import br.com.bipos.webapi.exception.ResourceNotFoundException
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+import java.time.LocalDateTime
+import java.util.*
+
+@Service
+class SmartPosSettingsService(
+    private val repository: SmartPosSettingsRepository,
+    private val companyRepository: CompanyRepository,
+    private val passwordEncoder: BCryptPasswordEncoder
+) {
+
+    @Transactional
+    fun createOrUpdateSettings(
+        companyId: UUID,
+        request: SmartPosSettingsRequest
+    ): SmartPosSettingsResponse {
+        // Valida se a empresa existe
+        val company = companyRepository.findById(companyId)
+            .orElseThrow { ResourceNotFoundException("Empresa não encontrada") }
+
+        // Validações de negócio
+        validateRequest(request)
+
+        // Busca configuração existente ou cria nova (agora apenas por companyId)
+        val settings = repository.findByCompanyIdAndIsActiveTrue(companyId)
+            .orElseGet {
+                SmartPosSettings(companyId = companyId)
+            }
+
+        // Atualiza campos de impressão
+        settings.print = SmartPosPrint.fromString(request.print)
+        settings.printLogo = request.printLogo
+        settings.logoUrl = when {
+            request.printLogo && !request.logoUrl.isNullOrBlank() -> request.logoUrl
+            request.printLogo -> throw BusinessException("URL da logo é obrigatória quando printLogo é true")
+            else -> null
+        }
+
+        // Atualiza comportamento
+        settings.autoLogoutMinutes = request.autoLogoutMinutes
+        settings.darkMode = request.darkMode
+        settings.soundEnabled = request.soundEnabled
+
+        // Atualiza segurança
+        updateSecurity(settings, request.security)
+
+        // Metadados
+        settings.updatedAt = LocalDateTime.now()
+        settings.version = settings.version + 1
+
+        val saved = repository.save(settings)
+        val companyModules = company.modules.mapNotNull { it.toDto() }
+
+        return toResponse(saved, companyModules)
+    }
+
+    private fun updateSecurity(settings: SmartPosSettings, security: SmartPosSecurityRequest?) {
+        when {
+            security == null -> {
+                // Se não veio security no request, mantém como estava
+                return
+            }
+
+            !security.enabled -> {
+                // Desativou segurança
+                settings.securityEnabled = false
+                settings.pinHash = null
+                settings.pinAttempts = 0
+                settings.lastPinChange = null
+            }
+
+            else -> {
+                // Ativou segurança
+                settings.securityEnabled = true
+
+                if (security.pin.isNullOrBlank()) {
+                    throw BusinessException("PIN é obrigatório quando segurança está ativada")
+                }
+
+                if (!security.pin.matches(Regex("\\d{4,6}"))) {
+                    throw BusinessException("PIN deve ter entre 4 e 6 dígitos numéricos")
+                }
+
+                settings.updatePin(passwordEncoder.encode(security.pin))
+            }
+        }
+    }
+
+    private fun validateRequest(request: SmartPosSettingsRequest) {
+        // Validações adicionais se necessário
+        if (request.autoLogoutMinutes !in 1..60) {
+            throw BusinessException("Tempo de logout deve estar entre 1 e 60 minutos")
+        }
+    }
+
+    @Transactional(readOnly = true)
+    fun getSettings(companyId: UUID): SmartPosSettingsResponse {
+        println("🔵 Service: buscando settings para company: $companyId")
+
+        val settings = repository.findByCompanyIdAndIsActiveTrue(companyId)
+            .orElseThrow {
+                println("❌ Settings não encontrados para company: $companyId")
+                ResourceNotFoundException("Configurações não encontradas para a empresa")
+            }
+
+        println("✅ Settings encontrados: ${settings.id}")
+
+        val company = companyRepository.findById(companyId)
+            .orElseThrow {
+                println("❌ Company não encontrada: $companyId")
+                ResourceNotFoundException("Empresa não encontrada")
+            }
+
+        println("✅ Company encontrada: ${company.name}")
+
+        val companyModules = company.modules.mapNotNull { it.toDto() }
+        println("✅ Módulos carregados: ${companyModules.size}")
+
+        return toResponse(settings, companyModules)
+    }
+    private fun toResponse(
+        settings: SmartPosSettings,
+        companyModules: List<CompanyModuleDto>
+    ): SmartPosSettingsResponse {
+        val settingsId = settings.id ?: throw IllegalStateException("Settings ID não pode ser nulo")
+
+        return SmartPosSettingsResponse(
+            id = settingsId,
+            print = settings.print.name,
+            printLogo = settings.printLogo,
+            logoUrl = settings.logoUrl,
+            securityEnabled = settings.securityEnabled,
+            hasPin = settings.pinHash != null,
+            lastPinChange = settings.lastPinChange,
+            pinAttempts = settings.pinAttempts,
+            autoLogoutMinutes = settings.autoLogoutMinutes,
+            darkMode = settings.darkMode,
+            soundEnabled = settings.soundEnabled,
+            availableModules = companyModules,
+            version = settings.version,
+            updatedAt = settings.updatedAt
+        )
+    }
+}

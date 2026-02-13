@@ -33,62 +33,45 @@ open class SecurityConfig(private val jwtAuthFilter: JwtAuthFilter) {
         http
             .cors { }
             .csrf { it.disable() }
-
             .sessionManagement {
                 it.sessionCreationPolicy(
                     org.springframework.security.config.http.SessionCreationPolicy.STATELESS
                 )
             }
-
             .authorizeHttpRequests { auth ->
-
-                auth.requestMatchers(HttpMethod.POST,"/auth/smartpos/qrcode").permitAll()
-
+                // Rotas públicas
+                auth.requestMatchers(HttpMethod.POST, "/auth/smartpos/qrcode").permitAll()
                 auth.requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
-
                 auth.requestMatchers("/uploads/**").permitAll()
-
                 auth.requestMatchers(HttpMethod.POST, "/companies").permitAll()
-
                 auth.requestMatchers(HttpMethod.GET, "/companies/*/logo").permitAll()
-
                 auth.requestMatchers(HttpMethod.GET, "/users/*/photo").permitAll()
 
+                // 🔥 Rotas do SmartPOS Settings (requerem autenticação)
+                auth.requestMatchers("/api/v1/smartpos/settings").authenticated()
+
+                // Todas as outras rotas requerem autenticação
                 auth.anyRequest().authenticated()
             }
-
-        http.addFilterBefore(
-            jwtAuthFilter,
-            UsernamePasswordAuthenticationFilter::class.java
-        )
-
-        http.headers { headers ->
-            headers.frameOptions { it.disable() }
-        }
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter::class.java)
+            .headers { headers ->
+                headers.frameOptions { it.disable() }
+            }
 
         return http.build()
     }
 
-
     @Bean
     fun corsConfigurationSource(): CorsConfigurationSource {
-        val configuration = CorsConfiguration()
+        val configuration = CorsConfiguration().apply {
+            allowedOrigins = listOf("http://localhost:5173")
+            allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
+            allowedHeaders = listOf("*")
+            allowCredentials = true
+        }
 
-        configuration.allowedOrigins = listOf(
-            "http://localhost:5173"
-        )
-
-        configuration.allowedMethods = listOf(
-            "GET", "POST", "PUT", "DELETE", "OPTIONS"
-        )
-
-        configuration.allowedHeaders = listOf("*")
-        configuration.allowCredentials = true
-
-        val source = UrlBasedCorsConfigurationSource()
-        source.registerCorsConfiguration("/**", configuration)
-
-        return source
+        return UrlBasedCorsConfigurationSource().apply {
+            registerCorsConfiguration("/**", configuration)
+        }
     }
-
 }
