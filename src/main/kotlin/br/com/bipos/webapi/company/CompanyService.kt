@@ -105,7 +105,12 @@ class CompanyService(
         phone = company.phone,
         logoUrl = company.logoUrl,
         updateLogoAt = company.updateLogoAt,
-        status = company.status.name
+        status = company.status.name,
+        city = company.city,
+        state = company.state,
+        address = company.address,
+        latitude = company.latitude,
+        longitude = company.longitude
     )
     
     fun updateLogo(companyId: UUID, file: MultipartFile) {

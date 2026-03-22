@@ -23,6 +23,13 @@ data class CompanyCreateDTO(
 
     val logoUrl: String? = null,
 
+    // 🌎 LOCALIZAÇÃO (NOVO)
+    val city: String? = null,
+    val state: String? = null,
+    val address: String? = null,
+    val latitude: Double? = null,
+    val longitude: Double? = null,
+
     // 🔥 DADOS DO OWNER
     @field:NotBlank(message = "Nome do responsável é obrigatório")
     val ownerName: String,
@@ -33,3 +40,4 @@ data class CompanyCreateDTO(
     @field:Size(min = 6, message = "Senha deve ter no mínimo 6 caracteres")
     val ownerPassword: String
 )
+

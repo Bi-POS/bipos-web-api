@@ -13,5 +13,12 @@ data class CompanyDTO(
     val phone: String,
     val logoUrl: String?,
     val updateLogoAt: Instant,
-    val status: String
+    val status: String,
+
+    // 🌎 NOVO
+    val city: String?,
+    val state: String?,
+    val address: String?,
+    val latitude: Double?,
+    val longitude: Double?
 )

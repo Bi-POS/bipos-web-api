@@ -648,12 +648,28 @@ class StockService(
             ?: throw StockNotFoundException("Estoque não encontrado para o produto $productId")
     }
 
-    fun getAllStocksByCompany(companyId: UUID): List<Stock> {
+    fun getAllStocksByCompany(companyId: UUID?): List<Stock> {
         return stockRepository.findByCompanyId(companyId)
     }
 
-    fun getLowStockItems(companyId: UUID): List<Stock> {
+    fun getLowStockItems(companyId: UUID?): List<LowStockResponse> {
         return stockRepository.findLowStockByCompanyId(companyId)
+            .map { stock ->
+                val deficit = stock.minimumQuantity.subtract(stock.currentQuantity)
+
+                val safetyMargin = deficit.multiply(BigDecimal("0.20"))
+
+                val recommendedPurchase = deficit.add(safetyMargin)
+
+                LowStockResponse(
+                    productId = stock.product.id,
+                    productName = stock.product.name,
+                    currentQuantity = stock.currentQuantity,
+                    minimumQuantity = stock.minimumQuantity,
+                    deficit = deficit,
+                    recommendedPurchase = recommendedPurchase
+                )
+            }
     }
 
     fun getProductMovements(productId: UUID, days: Int): List<StockMovement> {

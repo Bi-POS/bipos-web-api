@@ -19,11 +19,29 @@ data class Company(
 
     @Column(nullable = false, unique = true) @Email(message = "E-mail inválido.") var email: String = "",
 
-    @Column(nullable = false, unique = true, length = 20) @Pattern(regexp = "^[0-9A-Za-z]+$", message = "O CNPJ deve conter apenas caracteres alfanuméricos.") var document: String = "",
+    @Column(nullable = false, unique = true, length = 20) @Pattern(
+        regexp = "^[0-9A-Za-z]+$",
+        message = "O CNPJ deve conter apenas caracteres alfanuméricos."
+    ) var document: String = "",
 
     @Enumerated(EnumType.STRING) @Column(nullable = false) var documentType: DocumentType = DocumentType.CNPJ,
 
     @Column(nullable = false, length = 20) var phone: String = "",
+
+    @Column(name = "city", length = 120)
+    var city: String? = null,
+
+    @Column(name = "state", length = 10)
+    var state: String? = null,
+
+    @Column(name = "address", length = 255)
+    var address: String? = null,
+
+    @Column(name = "latitude")
+    var latitude: Double? = null,
+
+    @Column(name = "longitude")
+    var longitude: Double? = null,
 
     @Enumerated(EnumType.STRING) @Column(nullable = false) var status: CompanyStatus = CompanyStatus.ACTIVE,
 

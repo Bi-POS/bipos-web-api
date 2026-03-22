@@ -1,14 +1,13 @@
 package br.com.bipos.webapi.stock.dto
 
 import java.math.BigDecimal
-import java.util.*
+import java.util.UUID
 
-data class StockResponse(
-    val message: String?,
+data class LowStockResponse(
     val productId: UUID?,
     val productName: String,
     val currentQuantity: BigDecimal,
     val minimumQuantity: BigDecimal,
-    val availableQuantity: BigDecimal,
-    val isLowStock: Boolean
+    val deficit: BigDecimal,
+    val recommendedPurchase: BigDecimal
 )
