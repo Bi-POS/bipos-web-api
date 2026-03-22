@@ -5,6 +5,7 @@ import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
 import io.jsonwebtoken.security.Keys
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.stereotype.Service
@@ -21,6 +22,10 @@ class JwtService(
     private val expiration: Long
 ) {
 
+    companion object {
+        private val logger = LoggerFactory.getLogger(JwtService::class.java)
+    }
+
     private val key: Key by lazy {
         Keys.hmacShaKeyFor(
             secret.toByteArray(Charsets.UTF_8)
@@ -28,7 +33,7 @@ class JwtService(
     }
 
     init {
-        println("JWT SECRET carregado? ${secret.isNotBlank()}")
+        logger.debug("JWT configuration loaded")
     }
 
 

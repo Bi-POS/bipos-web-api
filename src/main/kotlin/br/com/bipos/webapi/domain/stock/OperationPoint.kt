@@ -14,7 +14,7 @@ class OperationPoint(
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id", nullable = false)
-    val company: Company?,
+    val company: Company,
 
     @Column(nullable = false)
     var name: String,                    // Ex: "Estádio do Maracanã", "Rock in Rio 2026"

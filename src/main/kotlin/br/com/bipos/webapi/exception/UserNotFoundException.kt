@@ -1,3 +1,3 @@
 package br.com.bipos.webapi.exception
 
-class UserNotFoundException(message: String) : RuntimeException(message)
+class UserNotFoundException(message: String) : ResourceNotFoundException(message)

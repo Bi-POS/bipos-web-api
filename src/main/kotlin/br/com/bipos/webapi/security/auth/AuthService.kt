@@ -1,5 +1,7 @@
 package br.com.bipos.webapi.security.auth
 
+import br.com.bipos.webapi.exception.ForbiddenOperationException
+import br.com.bipos.webapi.exception.InvalidCredentialsException
 import br.com.bipos.webapi.user.AppUserRepository
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
@@ -13,14 +15,14 @@ class AuthService(
 
     fun login(email: String, password: String): String {
         val user = appUserRepository.findByEmail(email)
-            ?: throw IllegalArgumentException("Usuário não encontrado")
+            ?: throw InvalidCredentialsException()
 
         if (!user.active) {
-            throw IllegalStateException("Usuário desativado")
+            throw ForbiddenOperationException("Usuário desativado")
         }
 
         if (!passwordEncoder.matches(password, user.passwordHash)) {
-            throw IllegalArgumentException("Credenciais inválidas")
+            throw InvalidCredentialsException()
         }
 
         return jwtService.generateToken(user)

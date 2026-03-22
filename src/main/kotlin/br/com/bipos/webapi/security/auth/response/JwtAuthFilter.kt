@@ -1,6 +1,7 @@
 package br.com.bipos.webapi.security.auth.response
 
 import br.com.bipos.webapi.domain.user.AppUser
+import br.com.bipos.webapi.security.PublicRoutes
 import br.com.bipos.webapi.security.auth.JwtService
 import br.com.bipos.webapi.user.AppUserDetails
 import br.com.bipos.webapi.user.AppUserDetailsService
@@ -19,19 +20,8 @@ class JwtAuthFilter(
     private val userDetailsService: AppUserDetailsService
 ) : OncePerRequestFilter() {
 
-    override fun shouldNotFilter(request: HttpServletRequest): Boolean {
-        val path = request.servletPath
-
-        return (
-                path == "/auth/login" ||
-                        path == "/auth/refresh" ||
-                        path.startsWith("/uploads") ||
-                        (request.method == "POST" && path == "/companies") ||
-                        (request.method == "GET" && path.startsWith("/companies/") && path.endsWith("/logo")) ||
-                        (request.method == "GET" && path.startsWith("/users/") && path.endsWith("/photo")) ||
-                        request.method == "OPTIONS"
-                )
-    }
+    override fun shouldNotFilter(request: HttpServletRequest): Boolean =
+        PublicRoutes.isPublic(request)
 
     override fun doFilterInternal(
         request: HttpServletRequest,
@@ -63,10 +53,10 @@ class JwtAuthFilter(
                     val domainUser = userDetails.getDomainUser()
 
                     val enrichedUser =
-                        if (domainUser.name.isNullOrBlank()) {
+                        if (domainUser.name.isBlank()) {
                             AppUser(
                                 id = domainUser.id,
-                                name = claims["userName"] as? String,
+                                name = claims["userName"] as? String ?: domainUser.name,
                                 email = domainUser.email,
                                 passwordHash = domainUser.passwordHash,
                                 role = domainUser.role,

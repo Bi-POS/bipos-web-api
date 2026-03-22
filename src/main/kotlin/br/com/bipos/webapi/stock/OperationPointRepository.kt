@@ -10,7 +10,9 @@ import java.util.*
 
 interface OperationPointRepository : JpaRepository<OperationPoint, UUID> {
 
-    fun findByCompanyIdOrderByStartDateDesc(companyId: UUID?): List<OperationPoint>
+    fun findByCompanyIdOrderByStartDateDesc(companyId: UUID): List<OperationPoint>
+
+    fun findByIdAndCompanyId(id: UUID, companyId: UUID): OperationPoint?
 
     fun findByCompanyIdAndIsActiveTrue(companyId: UUID): List<OperationPoint>
 

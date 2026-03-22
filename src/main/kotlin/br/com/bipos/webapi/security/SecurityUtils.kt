@@ -1,17 +1,20 @@
 package br.com.bipos.webapi.security
 
+import br.com.bipos.webapi.exception.AuthenticationRequiredException
 import br.com.bipos.webapi.user.AppUserDetails
 import org.springframework.security.core.context.SecurityContextHolder
 import java.util.*
 
 object SecurityUtils {
 
-    fun getCompanyId(): UUID? {
+    fun getCurrentUser(): AppUserDetails {
         val authentication = SecurityContextHolder.getContext().authentication
-            ?: throw IllegalStateException("Usuário não autenticado")
+            ?: throw AuthenticationRequiredException()
 
-        val principal = authentication.principal as AppUserDetails
-
-        return principal.user.company?.id
+        return authentication.principal as? AppUserDetails
+            ?: throw AuthenticationRequiredException()
     }
+
+    fun getCompanyId(): UUID =
+        getCurrentUser().requireCompanyId()
 }

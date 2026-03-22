@@ -1,10 +1,13 @@
 package br.com.bipos.webapi.sale.product
 
+import br.com.bipos.webapi.domain.catalog.Product
+import br.com.bipos.webapi.exception.BusinessException
+import br.com.bipos.webapi.exception.ConflictException
+import br.com.bipos.webapi.exception.ResourceNotFoundException
+import br.com.bipos.webapi.sale.SaleModuleService
 import br.com.bipos.webapi.sale.group.SaleGroupRepository
 import br.com.bipos.webapi.sale.product.dto.SaleProductCreateDTO
 import br.com.bipos.webapi.sale.product.dto.SaleProductDTO
-import br.com.bipos.webapi.domain.catalog.Product
-import br.com.bipos.webapi.sale.SaleModuleService
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
@@ -23,19 +26,19 @@ class SaleProductService(
     // CREATE
     // =========================
     @Transactional
-    fun create(companyId: UUID?, groupId: UUID, dto: SaleProductCreateDTO): SaleProductDTO {
+    fun create(companyId: UUID, groupId: UUID, dto: SaleProductCreateDTO): SaleProductDTO {
 
         saleModuleService.validateAccess(companyId)
 
         val group = saleGroupRepository.findByIdAndCompanyId(groupId, companyId)
-            ?: throw IllegalArgumentException("Grupo não encontrado")
+            ?: throw ResourceNotFoundException("Grupo não encontrado")
 
         if (dto.price <= BigDecimal.ZERO) {
-            throw IllegalArgumentException("Preço deve ser maior que zero")
+            throw BusinessException("Preço deve ser maior que zero")
         }
 
         if (saleProductRepository.existsByGroupIdAndNameIgnoreCase(groupId, dto.name)) {
-            throw IllegalArgumentException("Já existe um produto com esse nome neste grupo")
+            throw ConflictException("Já existe um produto com esse nome neste grupo")
         }
 
         val product = Product(
@@ -62,10 +65,10 @@ class SaleProductService(
     // =========================
     // LIST
     // =========================
-    fun list(companyId: UUID?, groupId: UUID): List<SaleProductDTO> {
+    fun list(companyId: UUID, groupId: UUID): List<SaleProductDTO> {
 
         saleGroupRepository.findByIdAndCompanyId(groupId, companyId)
-            ?: throw IllegalArgumentException("Grupo não encontrado")
+            ?: throw ResourceNotFoundException("Grupo não encontrado")
 
         return saleProductRepository
             .findAllByGroupId(groupId)
@@ -81,7 +84,7 @@ class SaleProductService(
             }
     }
 
-    fun listAll(companyId: UUID?): List<SaleProductDTO> =
+    fun listAll(companyId: UUID): List<SaleProductDTO> =
         saleProductRepository
             .findAllByCompanyId(companyId)
             .map {
@@ -100,17 +103,17 @@ class SaleProductService(
     // =========================
     @Transactional
     fun update(
-        companyId: UUID?,
+        companyId: UUID,
         groupId: UUID,
         productId: UUID,
         dto: SaleProductCreateDTO
     ): SaleProductDTO {
 
-        val product = saleProductRepository.findByIdAndGroupId(productId, groupId)
-            ?: throw IllegalArgumentException("Produto não encontrado")
+        val product = saleProductRepository.findByIdAndGroupIdAndGroupCompanyId(productId, groupId, companyId)
+            ?: throw ResourceNotFoundException("Produto não encontrado")
 
         if (dto.price <= BigDecimal.ZERO) {
-            throw IllegalArgumentException("Preço deve ser maior que zero")
+            throw BusinessException("Preço deve ser maior que zero")
         }
 
         product.name = dto.name.trim()
@@ -133,13 +136,13 @@ class SaleProductService(
     // =========================
     @Transactional
     fun delete(
-        companyId: UUID?,
+        companyId: UUID,
         groupId: UUID,
         productId: UUID
     ) {
         val product = saleProductRepository
             .findByIdAndGroupIdAndGroupCompanyId(productId, groupId, companyId)
-            ?: throw IllegalArgumentException("Produto não encontrado")
+            ?: throw ResourceNotFoundException("Produto não encontrado")
 
         saleProductRepository.delete(product)
     }

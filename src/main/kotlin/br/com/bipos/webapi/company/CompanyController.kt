@@ -2,20 +2,18 @@ package br.com.bipos.webapi.company
 
 import br.com.bipos.webapi.company.dto.CompanyCreateDTO
 import br.com.bipos.webapi.company.dto.CompanyDTO
-import br.com.bipos.webapi.security.SecurityUtils
+import br.com.bipos.webapi.security.CurrentUser
+import br.com.bipos.webapi.security.requireCompanyId
+import br.com.bipos.webapi.user.AppUserDetails
 import jakarta.validation.Valid
-import org.springframework.core.io.Resource
-import org.springframework.http.HttpHeaders
-import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
 import java.util.*
 
 
-@CrossOrigin(origins = ["http://localhost:5173"])
 @RestController
-@RequestMapping("/companies")
+@RequestMapping("/companies", "/api/v1/companies")
 class CompanyController(
     private val companyService: CompanyService
 ) {
@@ -35,10 +33,8 @@ class CompanyController(
         ResponseEntity.ok(companyService.getById(id))
 
     @GetMapping("/me")
-    fun me(): ResponseEntity<CompanyDTO> {
-        val companyId = SecurityUtils.getCompanyId()
-        return ResponseEntity.ok(companyService.getById(companyId))
-    }
+    fun me(@CurrentUser user: AppUserDetails): ResponseEntity<CompanyDTO> =
+        ResponseEntity.ok(companyService.getById(user.requireCompanyId()))
 
     @PutMapping("/{id}/logo")
     fun updateLogo(

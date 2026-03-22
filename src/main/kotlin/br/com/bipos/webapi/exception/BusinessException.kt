@@ -1,3 +1,5 @@
 package br.com.bipos.webapi.exception
 
-class BusinessException(message: String) : RuntimeException(message)
+import org.springframework.http.HttpStatus
+
+open class BusinessException(message: String) : ApiException(HttpStatus.BAD_REQUEST, message)

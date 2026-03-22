@@ -2,14 +2,14 @@ package br.com.bipos.webapi.reports.sales
 
 import br.com.bipos.webapi.payment.PaymentMethod
 import br.com.bipos.webapi.reports.sales.dto.*
+import br.com.bipos.webapi.security.CurrentUser
+import br.com.bipos.webapi.security.requireCompanyId
 import br.com.bipos.webapi.user.AppUserDetails
-import org.springframework.security.core.Authentication
-import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 import java.time.LocalDate
 
 @RestController
-@RequestMapping("/reports")
+@RequestMapping("/reports", "/api/v1/reports")
 class SalesReportController(
     private val service: SalesReportService
 ) {
@@ -19,14 +19,10 @@ class SalesReportController(
         @RequestParam(defaultValue = "day") groupBy: String,
         @RequestParam startDate: LocalDate,
         @RequestParam endDate: LocalDate,
-        authentication: Authentication
+        @CurrentUser user: AppUserDetails
     ): List<SalesReportResponse> {
-
-        val userDetails = authentication.principal as AppUserDetails
-        val companyId = userDetails.user.company?.id
-
         return service.getSalesReport(
-            companyId = companyId,
+            companyId = user.requireCompanyId(),
             groupBy = groupBy,
             startDate = startDate,
             endDate = endDate
@@ -37,14 +33,10 @@ class SalesReportController(
     fun getSalesByPaymentMethod(
         @RequestParam startDate: LocalDate,
         @RequestParam endDate: LocalDate,
-        authentication: Authentication
+        @CurrentUser user: AppUserDetails
     ): List<SalesByPaymentMethodResponse> {
-
-        val user = authentication.principal as AppUserDetails
-        val companyId = user.user.company?.id
-
         return service.getSalesByPaymentMethod(
-            companyId = companyId,
+            companyId = user.requireCompanyId(),
             startDate = startDate,
             endDate = endDate
         )
@@ -55,14 +47,10 @@ class SalesReportController(
         @PathVariable method: PaymentMethod,
         @RequestParam startDate: LocalDate,
         @RequestParam endDate: LocalDate,
-        authentication: Authentication
+        @CurrentUser user: AppUserDetails
     ): List<SalesByPaymentMethodDetailResponse> {
-
-        val user = authentication.principal as AppUserDetails
-        val companyId = user.user.company?.id
-
         return service.getSalesByPaymentMethodDetail(
-            companyId = companyId,
+            companyId = user.requireCompanyId(),
             method = method,
             startDate = startDate,
             endDate = endDate
@@ -74,11 +62,11 @@ class SalesReportController(
         @PathVariable method: PaymentMethod,
         @RequestParam startDate: LocalDate,
         @RequestParam endDate: LocalDate,
-        @AuthenticationPrincipal user: AppUserDetails
+        @CurrentUser user: AppUserDetails
     ): List<SalesByPaymentMethodProductDayResponse> {
 
         return service.reportByPaymentMethodProductsByDay(
-            companyId = user.user.company?.id,
+            companyId = user.requireCompanyId(),
             method = method,
             start = startDate.atStartOfDay(),
             end = endDate.atTime(23, 59, 59)
@@ -90,13 +78,10 @@ class SalesReportController(
     fun getSalesByPos(
         @RequestParam startDate: LocalDate,
         @RequestParam endDate: LocalDate,
-        authentication: Authentication
+        @CurrentUser user: AppUserDetails
     ): List<SalesByPosSummaryResponse> {
-
-        val user = authentication.principal as AppUserDetails
-
         return service.getSalesByPos(
-            companyId = user.user.company?.id,
+            companyId = user.requireCompanyId(),
             startDate = startDate,
             endDate = endDate
         )
@@ -107,13 +92,10 @@ class SalesReportController(
     fun getPosByUser(
         @RequestParam startDate: LocalDate,
         @RequestParam endDate: LocalDate,
-        authentication: Authentication
+        @CurrentUser user: AppUserDetails
     ): List<PosByUserResponse> {
-
-        val user = authentication.principal as AppUserDetails
-
         return service.getPosByUser(
-            companyId = user.user.company?.id,
+            companyId = user.requireCompanyId(),
             startDate = startDate,
             endDate = endDate
         )
@@ -124,13 +106,10 @@ class SalesReportController(
         @PathVariable serial: String,
         @RequestParam startDate: LocalDate,
         @RequestParam endDate: LocalDate,
-        authentication: Authentication
+        @CurrentUser user: AppUserDetails
     ): List<SalesByPosDetailResponse> {
-
-        val user = authentication.principal as AppUserDetails
-
         return service.getSalesByPosDetail(
-            companyId = user.user.company?.id,
+            companyId = user.requireCompanyId(),
             posSerial = serial,
             startDate = startDate,
             endDate = endDate
@@ -142,13 +121,10 @@ class SalesReportController(
     fun getSalesByUser(
         @RequestParam startDate: LocalDate,
         @RequestParam endDate: LocalDate,
-        authentication: Authentication
+        @CurrentUser user: AppUserDetails
     ): List<SalesByUserResponse> {
-
-        val user = authentication.principal as AppUserDetails
-
         return service.getSalesByUser(
-            companyId = user.user.company?.id,
+            companyId = user.requireCompanyId(),
             startDate = startDate,
             endDate = endDate
         )

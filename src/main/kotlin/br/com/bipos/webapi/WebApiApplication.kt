@@ -1,5 +1,6 @@
 package br.com.bipos.webapi
 
+import br.com.bipos.webapi.config.CorsProperties
 import br.com.bipos.webapi.init.SpacesProperties
 import br.com.bipos.webapi.security.auth.WebJwtProperties
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -12,6 +13,7 @@ import org.springframework.cache.annotation.EnableCaching
 @SpringBootApplication
 @EntityScan("br.com.bipos.webapi.domain")
 @EnableConfigurationProperties(
+    CorsProperties::class,
     WebJwtProperties::class,
     SpacesProperties::class
 )

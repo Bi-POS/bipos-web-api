@@ -1,3 +1,5 @@
 package br.com.bipos.webapi.exception
 
-class UnauthorizedUserException(message: String) : RuntimeException(message)
+import org.springframework.http.HttpStatus
+
+class UnauthorizedUserException(message: String) : ApiException(HttpStatus.UNAUTHORIZED, message)

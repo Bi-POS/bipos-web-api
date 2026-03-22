@@ -1,9 +1,10 @@
 package br.com.bipos.webapi.stock
 
 import br.com.bipos.webapi.domain.company.Company
-import br.com.bipos.webapi.domain.stock.*
+import br.com.bipos.webapi.domain.stock.OperationType
 import br.com.bipos.webapi.security.CurrentUser
-import br.com.bipos.webapi.security.SecurityUtils
+import br.com.bipos.webapi.security.requireCompanyId
+import br.com.bipos.webapi.security.requireCompanyRef
 import br.com.bipos.webapi.stock.dto.*
 import br.com.bipos.webapi.user.AppUserDetails
 import org.springframework.format.annotation.DateTimeFormat
@@ -11,24 +12,19 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import java.math.BigDecimal
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.util.UUID
 
 @RestController
 @RequestMapping("/api/v1/stock")
 class StockController(
-    private val stockService: StockService,
-    private val stockRepository: StockRepository
+    private val stockService: StockService
 ) {
 
     // ==========================
     // HELPERS (ajuste conforme seu AppUserDetails)
     // ==========================
-    private fun companyId(user: AppUserDetails): UUID =
-        user.user.company?.id ?: throw IllegalStateException("Usuário sem companyId na sessão")
-
     private fun companyRef(user: AppUserDetails): Company =
-        Company(id = companyId(user))
+        user.requireCompanyRef()
 
     // ==========================
     // ESTOQUE - OPERAÇÕES BÁSICAS
@@ -41,7 +37,7 @@ class StockController(
         @RequestParam(required = false, defaultValue = "0") minimumQuantity: BigDecimal,
         @RequestParam(required = false) maximumQuantity: BigDecimal?,
         @CurrentUser user: AppUserDetails
-    ): ResponseEntity<Stock> {
+    ): ResponseEntity<StockDetailResponse> {
         val stock = stockService.initializeStock(
             productId = productId,
             company = companyRef(user),
@@ -49,7 +45,7 @@ class StockController(
             minimumQuantity = minimumQuantity,
             maximumQuantity = maximumQuantity
         )
-        return ResponseEntity.ok(stock)
+        return ResponseEntity.ok(stock.toStockDetailResponse())
     }
 
     @PostMapping("/products/{productId}/purchase")
@@ -63,7 +59,7 @@ class StockController(
         expiryDate: LocalDate?,
         @RequestParam(required = false) reason: String?,
         @CurrentUser user: AppUserDetails
-    ): ResponseEntity<Stock> {
+    ): ResponseEntity<StockDetailResponse> {
         val stock = stockService.addPurchase(
             productId = productId,
             quantity = quantity,
@@ -74,17 +70,18 @@ class StockController(
             expiryDate = expiryDate,
             reason = reason
         )
-        return ResponseEntity.ok(stock)
+        return ResponseEntity.ok(stock.toStockDetailResponse())
     }
 
     @PostMapping("/products/{productId}/reserve")
     fun reserveStock(
         @PathVariable productId: UUID,
         @RequestParam quantity: BigDecimal,
-        @RequestParam saleId: UUID
-    ): ResponseEntity<Stock> {
-        val stock = stockService.reserveStock(productId, quantity, saleId)
-        return ResponseEntity.ok(stock)
+        @RequestParam saleId: UUID,
+        @CurrentUser user: AppUserDetails
+    ): ResponseEntity<StockDetailResponse> {
+        val stock = stockService.reserveStock(productId, user.requireCompanyId(), quantity, saleId)
+        return ResponseEntity.ok(stock.toStockDetailResponse())
     }
 
     @PostMapping("/products/{productId}/confirm-sale")
@@ -93,14 +90,15 @@ class StockController(
         @RequestParam quantity: BigDecimal,
         @RequestParam saleId: UUID,
         @CurrentUser user: AppUserDetails
-    ): ResponseEntity<Stock> {
+    ): ResponseEntity<StockDetailResponse> {
         val stock = stockService.confirmSale(
             productId = productId,
+            companyId = user.requireCompanyId(),
             quantity = quantity,
             saleId = saleId,
             user = user.user
         )
-        return ResponseEntity.ok(stock)
+        return ResponseEntity.ok(stock.toStockDetailResponse())
     }
 
     @PostMapping("/products/{productId}/loss")
@@ -113,7 +111,7 @@ class StockController(
         expiryDate: LocalDate?,
         @RequestParam(required = false) batchId: UUID?,
         @CurrentUser user: AppUserDetails
-    ): ResponseEntity<Stock> {
+    ): ResponseEntity<StockDetailResponse> {
         val stock = stockService.registerLoss(
             productId = productId,
             quantity = quantity,
@@ -123,38 +121,26 @@ class StockController(
             expiryDate = expiryDate,
             batchId = batchId
         )
-        return ResponseEntity.ok(stock)
+        return ResponseEntity.ok(stock.toStockDetailResponse())
     }
 
     @GetMapping("/products/{productId}")
     fun getStockByProduct(
-        @PathVariable productId: UUID
-    ): ResponseEntity<Stock> {
-        return ResponseEntity.ok(stockService.getStockByProductId(productId))
+        @PathVariable productId: UUID,
+        @CurrentUser user: AppUserDetails
+    ): ResponseEntity<StockDetailResponse> {
+        return ResponseEntity.ok(
+            stockService.getStockByProductId(productId, user.requireCompanyId()).toStockDetailResponse()
+        )
     }
 
     @GetMapping("/company")
-    fun getAllStocks(): ResponseEntity<List<StockResponse>> {
-
-        val companyId = SecurityUtils.getCompanyId()
-
-        val stocks = stockService.getAllStocksByCompany(companyId)
+    fun getAllStocks(@CurrentUser user: AppUserDetails): ResponseEntity<List<StockResponse>> {
+        val stocks = stockService.getAllStocksByCompany(user.requireCompanyId())
 
         val response = stocks.map { stock ->
-
-            val minimum = stock.minimumQuantity ?: BigDecimal.ZERO
-            val isLow = stock.currentQuantity <= minimum
-
-            StockResponse(
-                productId = stock.product.id,
-                productName = stock.product.name,
-                currentQuantity = stock.currentQuantity,
-                availableQuantity = stock.availableQuantity ?: stock.currentQuantity,
-                minimumQuantity = stock.minimumQuantity,
-                isLowStock = isLow,
-                message = if (isLow) {
-                    "Estoque abaixo do mínimo"
-                } else null
+            stock.toStockResponse(
+                message = if (stock.isLowStock) "Estoque abaixo do minimo" else null
             )
         }
 
@@ -163,16 +149,17 @@ class StockController(
 
     @GetMapping("/low-stock")
     fun getLowStock(@CurrentUser user: AppUserDetails): ResponseEntity<List<LowStockResponse>> {
-        return ResponseEntity.ok(stockService.getLowStockItems(user.user.company?.id))
+        return ResponseEntity.ok(stockService.getLowStockItems(user.requireCompanyId()))
     }
 
     @GetMapping("/products/{productId}/movements")
     fun getMovements(
         @PathVariable productId: UUID,
-        @RequestParam(defaultValue = "30") days: Int
+        @RequestParam(defaultValue = "30") days: Int,
+        @CurrentUser user: AppUserDetails
     ): ResponseEntity<List<StockMovementResponse>> {
 
-        val movements = stockService.getProductMovements(productId, days)
+        val movements = stockService.getProductMovements(productId, user.requireCompanyId(), days)
 
         val response = movements.map { movement ->
             StockMovementResponse(
@@ -218,22 +205,15 @@ class StockController(
         @RequestParam minimumQuantity: BigDecimal,
         @CurrentUser user: AppUserDetails
     ): ResponseEntity<StockResponse> {
-        val stock = stockService.getStockByProductId(productId)
-
-        stock.minimumQuantity = minimumQuantity
-        stock.updatedAt = LocalDateTime.now()
-
-        val updatedStock = stockRepository.save(stock)
+        val updatedStock = stockService.adjustMinimumStock(
+            productId = productId,
+            companyId = user.requireCompanyId(),
+            minimumQuantity = minimumQuantity
+        )
 
         return ResponseEntity.ok(
-            StockResponse(
-                message = "✅ Quantidade mínima atualizada para $minimumQuantity unidades",
-                productId = productId,
-                productName = updatedStock.product.name,
-                currentQuantity = updatedStock.currentQuantity,
-                minimumQuantity = updatedStock.minimumQuantity,
-                availableQuantity = updatedStock.availableQuantity,
-                isLowStock = updatedStock.isLowStock
+            updatedStock.toStockResponse(
+                message = "Quantidade minima atualizada para $minimumQuantity unidades"
             )
         )
     }
@@ -244,15 +224,20 @@ class StockController(
     @GetMapping("/batches/expiring")
     fun getExpiringBatches(
         @CurrentUser user: AppUserDetails
-    ): ResponseEntity<List<ProductExpiryBatch>> {
-        return ResponseEntity.ok(stockService.getExpiringBatches(companyId(user)))
+    ): ResponseEntity<List<ExpiryBatchResponse>> {
+        return ResponseEntity.ok(
+            stockService.getExpiringBatches(user.requireCompanyId()).map { it.toExpiryBatchResponse() }
+        )
     }
 
     @GetMapping("/products/{productId}/batches")
     fun getProductBatches(
-        @PathVariable productId: UUID
-    ): ResponseEntity<List<ProductExpiryBatch>> {
-        return ResponseEntity.ok(stockService.getProductBatches(productId))
+        @PathVariable productId: UUID,
+        @CurrentUser user: AppUserDetails
+    ): ResponseEntity<List<ExpiryBatchResponse>> {
+        return ResponseEntity.ok(
+            stockService.getProductBatches(productId, user.requireCompanyId()).map { it.toExpiryBatchResponse() }
+        )
     }
 
     // ==========================
@@ -262,14 +247,14 @@ class StockController(
     fun dashboardSummary(
         @CurrentUser user: AppUserDetails
     ): ResponseEntity<DashboardSummaryResponse> {
-        return ResponseEntity.ok(stockService.getDashboardSummary(companyId(user)))
+        return ResponseEntity.ok(stockService.getDashboardSummary(user.requireCompanyId()))
     }
 
     @GetMapping("/alerts/waste")
     fun wasteAlerts(
         @CurrentUser user: AppUserDetails
     ): ResponseEntity<List<WasteAlert>> {
-        return ResponseEntity.ok(stockService.checkWasteAlerts(companyId(user)))
+        return ResponseEntity.ok(stockService.checkWasteAlerts(user.requireCompanyId()))
     }
 
     // ==========================
@@ -279,23 +264,24 @@ class StockController(
     fun registerOperation(
         @RequestBody request: RegisterOperationRequest,
         @CurrentUser user: AppUserDetails
-    ): ResponseEntity<OperationPoint> {
+    ): ResponseEntity<OperationPointResponse> {
         val op = stockService.registerOperation(companyRef(user), request)
-        return ResponseEntity.ok(op)
+        return ResponseEntity.ok(op.toOperationPointResponse())
     }
 
     @GetMapping("/operations")
     fun getOperations(
         @CurrentUser user: AppUserDetails
     ): ResponseEntity<List<OperationResponse>> {
-        return ResponseEntity.ok(stockService.getAllOperations(companyId(user)))
+        return ResponseEntity.ok(stockService.getAllOperations(user.requireCompanyId()))
     }
 
     @GetMapping("/operations/{operationId}")
     fun getOperationReport(
-        @PathVariable operationId: UUID
+        @PathVariable operationId: UUID,
+        @CurrentUser user: AppUserDetails
     ): ResponseEntity<OperationDetailResponse> {
-        return ResponseEntity.ok(stockService.getOperationReport(operationId))
+        return ResponseEntity.ok(stockService.getOperationReport(operationId, user.requireCompanyId()))
     }
 
     @GetMapping("/operations/analysis")
@@ -303,7 +289,7 @@ class StockController(
         @RequestParam(defaultValue = "12") monthsBack: Int,
         @CurrentUser user: AppUserDetails
     ): ResponseEntity<OperationAnalysisSummary> {
-        return ResponseEntity.ok(stockService.getOperationAnalysis(companyId(user), monthsBack))
+        return ResponseEntity.ok(stockService.getOperationAnalysis(user.requireCompanyId(), monthsBack))
     }
 
     @GetMapping("/operations/purchase-suggestions")
@@ -313,7 +299,7 @@ class StockController(
     ): ResponseEntity<OperationPurchaseSuggestion> {
         return ResponseEntity.ok(
             stockService.getOperationPurchaseSuggestions(
-                companyId = companyId(user),
+                companyId = user.requireCompanyId(),
                 operationType = operationType
             )
         )

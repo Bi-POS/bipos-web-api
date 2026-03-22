@@ -1,8 +1,10 @@
 package br.com.bipos.webapi.sustainability
 
+import br.com.bipos.webapi.exception.InternalServerException
 import br.com.bipos.webapi.sustainability.dto.RecyclingPointDTO
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.http.*
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
 
@@ -10,6 +12,10 @@ import org.springframework.web.client.RestTemplate
 class RecyclingService(
     private val restTemplate: RestTemplate
 ) {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(RecyclingService::class.java)
+    }
 
     /**
      * 🔁 Lista de servidores Overpass (fallback automático)
@@ -85,18 +91,18 @@ class RecyclingService(
 
         for (server in overpassServers) {
             try {
-                println("🌍 Tentando Overpass: $server")
+                logger.debug("Trying Overpass server {}", server)
 
                 val response = restTemplate.postForObject(server, entity, Map::class.java)
 
                 if (response != null) return response
 
             } catch (ex: Exception) {
-                println("⚠️ Falha no servidor $server")
+                logger.warn("Overpass server {} failed", server)
             }
         }
 
-        throw RuntimeException("Nenhum servidor Overpass respondeu.")
+        throw InternalServerException("Nenhum servidor Overpass respondeu.")
     }
 
     /**
@@ -106,7 +112,7 @@ class RecyclingService(
     fun resolveAddressCached(lat: Double, lon: Double): String {
 
         return try {
-            println("📍 Reverse geocoding $lat,$lon")
+            logger.debug("Reverse geocoding coordinates {}, {}", lat, lon)
 
             val url = "https://nominatim.openstreetmap.org/reverse" +
                     "?lat=$lat&lon=$lon&format=json"

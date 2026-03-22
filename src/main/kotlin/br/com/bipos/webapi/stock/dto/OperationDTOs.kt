@@ -39,6 +39,17 @@ data class OperationResponse(
     val isActive: Boolean
 )
 
+data class OperationPointResponse(
+    val operationId: UUID?,
+    val name: String,
+    val operationType: OperationType,
+    val startDate: LocalDateTime?,
+    val endDate: LocalDateTime?,
+    val expectedAudience: Int?,
+    val numberOfCheckouts: Int,
+    val isActive: Boolean
+)
+
 data class OperationDetailResponse(
     val operationId: UUID?,
     val name: String,

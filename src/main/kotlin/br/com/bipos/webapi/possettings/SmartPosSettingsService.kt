@@ -7,7 +7,9 @@ import br.com.bipos.webapi.companymodule.toDto
 import br.com.bipos.webapi.domain.settings.SmartPosPrint
 import br.com.bipos.webapi.domain.settings.SmartPosSettings
 import br.com.bipos.webapi.exception.BusinessException
+import br.com.bipos.webapi.exception.InternalServerException
 import br.com.bipos.webapi.exception.ResourceNotFoundException
+import org.slf4j.LoggerFactory
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -20,6 +22,10 @@ class SmartPosSettingsService(
     private val companyRepository: CompanyRepository,
     private val passwordEncoder: BCryptPasswordEncoder
 ) {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(SmartPosSettingsService::class.java)
+    }
 
     @Transactional
     fun createOrUpdateSettings(
@@ -107,34 +113,35 @@ class SmartPosSettingsService(
 
     @Transactional(readOnly = true)
     fun getSettings(companyId: UUID): SmartPosSettingsResponse {
-        println("🔵 Service: buscando settings para company: $companyId")
+        logger.debug("Fetching SmartPOS settings for company {}", companyId)
 
         val settings = repository.findByCompanyIdAndIsActiveTrue(companyId)
             .orElseThrow {
-                println("❌ Settings não encontrados para company: $companyId")
+                logger.warn("SmartPOS settings not found for company {}", companyId)
                 ResourceNotFoundException("Configurações não encontradas para a empresa")
             }
 
-        println("✅ Settings encontrados: ${settings.id}")
+        logger.debug("SmartPOS settings found with id {}", settings.id)
 
         val company = companyRepository.findById(companyId)
             .orElseThrow {
-                println("❌ Company não encontrada: $companyId")
+                logger.warn("Company {} not found while fetching SmartPOS settings", companyId)
                 ResourceNotFoundException("Empresa não encontrada")
             }
 
-        println("✅ Company encontrada: ${company.name}")
+        logger.debug("Company {} found for SmartPOS settings", company.name)
 
         val companyModules = company.modules.mapNotNull { it.toDto() }
-        println("✅ Módulos carregados: ${companyModules.size}")
+        logger.debug("Loaded {} company modules for SmartPOS settings", companyModules.size)
 
         return toResponse(settings, companyModules)
     }
+
     private fun toResponse(
         settings: SmartPosSettings,
         companyModules: List<CompanyModuleDto>
     ): SmartPosSettingsResponse {
-        val settingsId = settings.id ?: throw IllegalStateException("Settings ID não pode ser nulo")
+        val settingsId = settings.id ?: throw InternalServerException("Settings ID não pode ser nulo")
 
         return SmartPosSettingsResponse(
             id = settingsId,

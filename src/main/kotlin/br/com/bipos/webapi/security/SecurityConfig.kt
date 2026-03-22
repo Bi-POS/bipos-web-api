@@ -1,10 +1,9 @@
 package br.com.bipos.webapi.security
 
+import br.com.bipos.webapi.config.CorsProperties
 import br.com.bipos.webapi.security.auth.response.JwtAuthFilter
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.core.annotation.Order
-import org.springframework.http.HttpMethod
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
@@ -19,7 +18,10 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 
 @Configuration
 @EnableMethodSecurity
-open class SecurityConfig(private val jwtAuthFilter: JwtAuthFilter) {
+open class SecurityConfig(
+    private val jwtAuthFilter: JwtAuthFilter,
+    private val corsProperties: CorsProperties
+) {
 
     @Bean
     open fun passwordEncoder(): PasswordEncoder = BCryptPasswordEncoder()
@@ -39,18 +41,7 @@ open class SecurityConfig(private val jwtAuthFilter: JwtAuthFilter) {
                 )
             }
             .authorizeHttpRequests { auth ->
-                // Rotas públicas
-                auth.requestMatchers(HttpMethod.POST, "/auth/smartpos/qrcode").permitAll()
-                auth.requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
-                auth.requestMatchers("/uploads/**").permitAll()
-                auth.requestMatchers(HttpMethod.POST, "/companies").permitAll()
-                auth.requestMatchers(HttpMethod.GET, "/companies/*/logo").permitAll()
-                auth.requestMatchers(HttpMethod.GET, "/users/*/photo").permitAll()
-
-                // 🔥 Rotas do SmartPOS Settings (requerem autenticação)
-                auth.requestMatchers("/api/v1/smartpos/settings").authenticated()
-
-                // Todas as outras rotas requerem autenticação
+                auth.requestMatchers(*PublicRoutes.matchers()).permitAll()
                 auth.anyRequest().authenticated()
             }
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter::class.java)
@@ -64,7 +55,7 @@ open class SecurityConfig(private val jwtAuthFilter: JwtAuthFilter) {
     @Bean
     fun corsConfigurationSource(): CorsConfigurationSource {
         val configuration = CorsConfiguration().apply {
-            allowedOrigins = listOf("http://localhost:5173")
+            allowedOrigins = corsProperties.allowedOrigins
             allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
             allowedHeaders = listOf("*")
             allowCredentials = true

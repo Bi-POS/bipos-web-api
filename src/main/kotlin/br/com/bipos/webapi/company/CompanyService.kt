@@ -10,17 +10,17 @@ import br.com.bipos.webapi.domain.module.ModuleType
 import br.com.bipos.webapi.domain.user.AppUser
 import br.com.bipos.webapi.domain.user.UserRole
 import br.com.bipos.webapi.domain.utils.DocumentType
-import br.com.bipos.webapi.init.SpacesProperties
+import br.com.bipos.webapi.exception.BusinessException
+import br.com.bipos.webapi.exception.ConflictException
+import br.com.bipos.webapi.exception.InternalServerException
+import br.com.bipos.webapi.exception.ResourceNotFoundException
 import br.com.bipos.webapi.module.ModuleRepository
+import br.com.bipos.webapi.storage.SpacesStorageService
 import br.com.bipos.webapi.user.AppUserRepository
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
-import software.amazon.awssdk.core.sync.RequestBody
-import software.amazon.awssdk.services.s3.S3Client
-import software.amazon.awssdk.services.s3.model.ObjectCannedACL
-import software.amazon.awssdk.services.s3.model.PutObjectRequest
 import java.time.Instant
 import java.util.*
 
@@ -31,19 +31,18 @@ class CompanyService(
     private val companyModuleRepository: CompanyModuleRepository,
     private val appUserRepository: AppUserRepository,
     private val passwordEncoder: PasswordEncoder,
-    private val spacesProperties: SpacesProperties,
-    private val s3Client: S3Client
+    private val storageService: SpacesStorageService
 ) {
 
     @Transactional
     fun create(dto: CompanyCreateDTO): CompanyDTO {
 
         if (companyRepository.existsByEmail(dto.email)) {
-            throw IllegalArgumentException("Email já cadastrado")
+            throw ConflictException("Email já cadastrado")
         }
 
         if (companyRepository.existsByDocument(dto.document)) {
-            throw IllegalArgumentException("Documento já cadastrado")
+            throw ConflictException("Documento já cadastrado")
         }
 
         val company = companyRepository.save(
@@ -59,7 +58,7 @@ class CompanyService(
 
         // 🔹 módulo SALE padrão
         val saleModule = moduleRepository.findByName(ModuleType.SALE)
-            ?: throw IllegalStateException("Módulo SALE não cadastrado")
+            ?: throw InternalServerException("Módulo SALE não cadastrado")
 
         companyModuleRepository.save(
             CompanyModule(
@@ -87,7 +86,7 @@ class CompanyService(
 
     fun getById(id: UUID?): CompanyDTO =
         companyRepository.findById(id)
-            .orElseThrow { IllegalArgumentException("Empresa não encontrada") }
+            .orElseThrow { ResourceNotFoundException("Empresa não encontrada") }
             .let { toDTO(it) }
 
     @Transactional
@@ -116,26 +115,15 @@ class CompanyService(
     fun updateLogo(companyId: UUID, file: MultipartFile) {
 
         if (file.isEmpty || !file.contentType.orEmpty().startsWith("image")) {
-            throw IllegalArgumentException("Arquivo inválido")
+            throw BusinessException("Arquivo inválido")
         }
 
         val extension = file.originalFilename?.substringAfterLast(".", "png")
         val key = "logos/company-$companyId.$extension"
-
-        s3Client.putObject(
-            PutObjectRequest.builder()
-                .bucket(spacesProperties.bucket)
-                .key(key)
-                .contentType(file.contentType)
-                .acl(ObjectCannedACL.PUBLIC_READ)
-                .build(),
-            RequestBody.fromInputStream(file.inputStream, file.size)
-        )
-
-        val url = "${spacesProperties.cdn}/$key"
+        val url = storageService.uploadPublicFile(key, file)
 
         val company = companyRepository.findById(companyId)
-            .orElseThrow { RuntimeException("Empresa não encontrada") }
+            .orElseThrow { ResourceNotFoundException("Empresa não encontrada") }
 
         company.logoUrl = url
         company.updateLogoAt = Instant.now()

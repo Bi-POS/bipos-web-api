@@ -2,6 +2,8 @@ package br.com.bipos.webapi.sale
 
 import br.com.bipos.webapi.companymodule.CompanyModuleRepository
 import br.com.bipos.webapi.domain.module.ModuleType
+import br.com.bipos.webapi.exception.ForbiddenOperationException
+import br.com.bipos.webapi.exception.InternalServerException
 import br.com.bipos.webapi.module.ModuleRepository
 import br.com.bipos.webapi.module.ModuleStatus
 import org.springframework.stereotype.Service
@@ -13,15 +15,15 @@ class SaleModuleService(
     private val moduleRepository: ModuleRepository
 ) {
 
-    fun validateAccess(companyId: UUID?) {  // 🔥 Mudei para UUID (não nullable)
+    fun validateAccess(companyId: UUID) {
         val saleModule = moduleRepository.findByName(ModuleType.SALE)
-            ?: throw IllegalStateException("Módulo SALE não cadastrado no sistema")
+            ?: throw InternalServerException("Módulo SALE não cadastrado no sistema")
 
         val hasModuleActive = companyModuleRepository
             .existsByCompanyIdAndModuleAndEnabledTrue(companyId, saleModule)
 
         if (!hasModuleActive) {
-            throw IllegalStateException(
+            throw ForbiddenOperationException(
                 "Empresa não possui o módulo SALE ativo. " +
                         "Verifique se a empresa contratou e ativou o módulo."
             )

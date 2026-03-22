@@ -16,8 +16,16 @@ interface StockMovementRepository : JpaRepository<StockMovement, UUID> {
         date: LocalDateTime
     ): List<StockMovement>
 
+    fun findByProductIdAndCompanyIdAndMovementDateAfterOrderByMovementDateDesc(
+        productId: UUID,
+        companyId: UUID,
+        date: LocalDateTime
+    ): List<StockMovement>
+
     // Busca todas movimentações de um produto ordenadas por data
     fun findByProductIdOrderByMovementDateDesc(productId: UUID?): List<StockMovement>
+
+    fun findByProductIdAndCompanyIdOrderByMovementDateDesc(productId: UUID, companyId: UUID): List<StockMovement>
 
     // Busca movimentações de uma empresa
     fun findByCompanyIdOrderByMovementDateDesc(companyId: UUID): List<StockMovement>

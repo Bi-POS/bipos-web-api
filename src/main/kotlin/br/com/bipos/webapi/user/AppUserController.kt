@@ -1,5 +1,7 @@
 package br.com.bipos.webapi.user
 
+import br.com.bipos.webapi.security.CurrentUser
+import br.com.bipos.webapi.security.requireCompanyId
 import br.com.bipos.webapi.user.dto.UserCreateDTO
 import br.com.bipos.webapi.user.dto.UserResponseDTO
 import br.com.bipos.webapi.user.dto.UserUpdateDTO
@@ -7,14 +9,12 @@ import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
-import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
-import org.springframework.web.server.ResponseStatusException
 import java.util.*
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/users", "/api/v1/users")
 class UserController(
     private val appUserService: AppUserService
 ) {
@@ -27,24 +27,9 @@ class UserController(
     @PreAuthorize("hasAnyRole('OWNER','ADMIN','MANAGER','OPERATOR')")
     fun getById(
         @PathVariable id: UUID,
-        @AuthenticationPrincipal details: AppUserDetails?
-    ): ResponseEntity<UserResponseDTO> {
-
-        val currentUser = details?.user
-            ?: throw ResponseStatusException(
-                HttpStatus.UNAUTHORIZED,
-                "Usuário não autenticado"
-            )
-
-        val companyId = currentUser.company?.id
-            ?: throw ResponseStatusException(
-                HttpStatus.FORBIDDEN,
-                "Usuário sem empresa vinculada"
-            )
-
-        val user = appUserService.getById(id, companyId)
-        return ResponseEntity.ok(user)
-    }
+        @CurrentUser details: AppUserDetails
+    ): ResponseEntity<UserResponseDTO> =
+        ResponseEntity.ok(appUserService.getById(id, details.requireCompanyId()))
 
     /* =========================
        LISTAR USUÁRIOS
@@ -53,24 +38,9 @@ class UserController(
     @GetMapping
     @PreAuthorize("hasAnyRole('OWNER','ADMIN','MANAGER')")
     fun list(
-        @AuthenticationPrincipal details: AppUserDetails?
-    ): ResponseEntity<List<UserResponseDTO>> {
-
-        val currentUser = details?.user
-            ?: throw ResponseStatusException(
-                HttpStatus.UNAUTHORIZED,
-                "Usuário não autenticado"
-            )
-
-        val companyId = currentUser.company?.id
-            ?: throw ResponseStatusException(
-                HttpStatus.FORBIDDEN,
-                "Usuário sem empresa vinculada"
-            )
-
-        val users = appUserService.list(companyId)
-        return ResponseEntity.ok(users)
-    }
+        @CurrentUser details: AppUserDetails
+    ): ResponseEntity<List<UserResponseDTO>> =
+        ResponseEntity.ok(appUserService.list(details.requireCompanyId()))
 
     /* =========================
        CRIAR USUÁRIO
@@ -80,24 +50,10 @@ class UserController(
     @PreAuthorize("hasAnyRole('OWNER','ADMIN')")
     fun create(
         @Valid @RequestBody dto: UserCreateDTO,
-        @AuthenticationPrincipal details: AppUserDetails?
-    ): ResponseEntity<UserResponseDTO> {
-
-        val currentUser = details?.user
-            ?: throw ResponseStatusException(
-                HttpStatus.UNAUTHORIZED,
-                "Usuário não autenticado"
-            )
-
-        val companyId = currentUser.company?.id
-            ?: throw ResponseStatusException(
-                HttpStatus.FORBIDDEN,
-                "Usuário sem empresa vinculada"
-            )
-
-        val created = appUserService.create(dto, companyId)
-        return ResponseEntity.status(HttpStatus.CREATED).body(created)
-    }
+        @CurrentUser details: AppUserDetails
+    ): ResponseEntity<UserResponseDTO> =
+        ResponseEntity.status(HttpStatus.CREATED)
+            .body(appUserService.create(dto, details.requireCompanyId()))
 
     /* =========================
        ATUALIZAR FOTO
@@ -107,10 +63,11 @@ class UserController(
     @PreAuthorize("hasAnyRole('OWNER','ADMIN')")
     fun updatePhoto(
         @PathVariable id: UUID,
-        @RequestParam("file") file: MultipartFile
+        @RequestParam("file") file: MultipartFile,
+        @CurrentUser details: AppUserDetails
     ): ResponseEntity<UserResponseDTO> {
 
-        val updatedUser = appUserService.updatePhoto(id, file)
+        val updatedUser = appUserService.updatePhoto(id, details.requireCompanyId(), file)
         return ResponseEntity.ok(updatedUser)
     }
 
@@ -123,24 +80,9 @@ class UserController(
     fun update(
         @PathVariable id: UUID,
         @Valid @RequestBody dto: UserUpdateDTO,
-        @AuthenticationPrincipal details: AppUserDetails?
-    ): ResponseEntity<UserResponseDTO> {
-
-        val currentUser = details?.user
-            ?: throw ResponseStatusException(
-                HttpStatus.UNAUTHORIZED,
-                "Usuário não autenticado"
-            )
-
-        val companyId = currentUser.company?.id
-            ?: throw ResponseStatusException(
-                HttpStatus.FORBIDDEN,
-                "Usuário sem empresa vinculada"
-            )
-
-        val updated = appUserService.update(id, dto, companyId)
-        return ResponseEntity.ok(updated)
-    }
+        @CurrentUser details: AppUserDetails
+    ): ResponseEntity<UserResponseDTO> =
+        ResponseEntity.ok(appUserService.update(id, dto, details.requireCompanyId()))
 
     /* =========================
        DELETAR USUÁRIO
@@ -150,22 +92,9 @@ class UserController(
     @PreAuthorize("hasRole('OWNER')")
     fun delete(
         @PathVariable id: UUID,
-        @AuthenticationPrincipal details: AppUserDetails?
+        @CurrentUser details: AppUserDetails
     ): ResponseEntity<Void> {
-
-        val currentUser = details?.user
-            ?: throw ResponseStatusException(
-                HttpStatus.UNAUTHORIZED,
-                "Usuário não autenticado"
-            )
-
-        val companyId = currentUser.company?.id
-            ?: throw ResponseStatusException(
-                HttpStatus.FORBIDDEN,
-                "Usuário sem empresa vinculada"
-            )
-
-        appUserService.delete(id, companyId)
+        appUserService.delete(id, details.requireCompanyId())
         return ResponseEntity.noContent().build()
     }
 }

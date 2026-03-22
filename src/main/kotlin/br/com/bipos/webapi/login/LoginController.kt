@@ -1,16 +1,14 @@
 package br.com.bipos.webapi.login
 
+import br.com.bipos.webapi.login.dto.LoginRequest
 import br.com.bipos.webapi.security.auth.AuthService
 import br.com.bipos.webapi.security.auth.response.AuthResponse
-import br.com.bipos.webapi.exception.UnauthorizedUserException
-import br.com.bipos.webapi.login.dto.LoginRequest
 import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
-@CrossOrigin(origins = ["http://localhost:5173"])
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/auth", "/api/v1/auth")
 class LoginController(private val authService: AuthService) {
 
     @PostMapping("/login")

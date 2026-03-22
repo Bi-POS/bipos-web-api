@@ -1,3 +1,3 @@
 package br.com.bipos.webapi.exception
 
-class InsufficientStockException(message: String) : RuntimeException(message)
+class InsufficientStockException(message: String) : ConflictException(message)

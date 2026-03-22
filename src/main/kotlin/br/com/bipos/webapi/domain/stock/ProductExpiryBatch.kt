@@ -23,7 +23,7 @@ class ProductExpiryBatch(
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id", nullable = false)
-    val company: Company?,
+    val company: Company,
 
     @Column(name = "batch_code")
     var batchCode: String? = null,

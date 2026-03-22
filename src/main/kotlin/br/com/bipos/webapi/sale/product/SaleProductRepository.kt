@@ -19,10 +19,15 @@ interface SaleProductRepository : JpaRepository<Product, UUID> {
         groupId: UUID
     ): Product?
 
+    fun findByIdAndGroupCompanyId(
+        id: UUID,
+        companyId: UUID
+    ): Product?
+
     fun findByIdAndGroupIdAndGroupCompanyId(
         id: UUID,
         groupId: UUID,
-        companyId: UUID?
+        companyId: UUID
     ): Product?
 
     @Query(
@@ -31,5 +36,5 @@ interface SaleProductRepository : JpaRepository<Product, UUID> {
         where p.group.company.id = :companyId
     """
     )
-    fun findAllByCompanyId(companyId: UUID?): List<Product>
+    fun findAllByCompanyId(companyId: UUID): List<Product>
 }

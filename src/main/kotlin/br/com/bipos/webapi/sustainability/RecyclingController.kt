@@ -1,8 +1,12 @@
 package br.com.bipos.webapi.sustainability
 
-import br.com.bipos.webapi.security.SecurityUtils
 import br.com.bipos.webapi.company.CompanyRepository
+import br.com.bipos.webapi.exception.BusinessException
+import br.com.bipos.webapi.exception.ResourceNotFoundException
+import br.com.bipos.webapi.security.CurrentUser
+import br.com.bipos.webapi.security.requireCompanyId
 import br.com.bipos.webapi.sustainability.dto.RecyclingPointDTO
+import br.com.bipos.webapi.user.AppUserDetails
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
@@ -14,18 +18,15 @@ class RecyclingController(
 ) {
 
     @GetMapping("/recycling-points")
-    fun getPoints(): ResponseEntity<List<RecyclingPointDTO>> {
-
-        val companyId = SecurityUtils.getCompanyId()
-
-        val company = companyRepository.findById(companyId)
-            .orElseThrow { RuntimeException("Empresa não encontrada") }
+    fun getPoints(@CurrentUser user: AppUserDetails): ResponseEntity<List<RecyclingPointDTO>> {
+        val company = companyRepository.findById(user.requireCompanyId())
+            .orElseThrow { ResourceNotFoundException("Empresa não encontrada") }
 
         val lat = company.latitude
-            ?: return ResponseEntity.badRequest().build()
+            ?: throw BusinessException("Empresa sem latitude configurada")
 
         val lon = company.longitude
-            ?: return ResponseEntity.badRequest().build()
+            ?: throw BusinessException("Empresa sem longitude configurada")
 
         val points = recyclingService.getRecyclingPoints(lat, lon)
 

@@ -13,6 +13,10 @@ interface ProductExpiryBatchRepository : JpaRepository<ProductExpiryBatch, UUID>
 
     fun findByProductIdAndIsActiveTrue(productId: UUID): List<ProductExpiryBatch>
 
+    fun findByProductIdAndCompanyIdAndIsActiveTrue(productId: UUID, companyId: UUID): List<ProductExpiryBatch>
+
+    fun findByIdAndCompanyId(id: UUID, companyId: UUID): ProductExpiryBatch?
+
     @Query("SELECT p FROM ProductExpiryBatch p WHERE p.company.id = :companyId AND p.isActive = true AND p.expiryDate <= :date ORDER BY p.expiryDate ASC")
     fun findExpiringBatches(
         @Param("companyId") companyId: UUID,

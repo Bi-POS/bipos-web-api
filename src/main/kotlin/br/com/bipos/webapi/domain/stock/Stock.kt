@@ -30,7 +30,7 @@ class Stock(
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id", nullable = false)
-    val company: Company?,
+    val company: Company,
 
     @Column(nullable = false)
     var currentQuantity: BigDecimal = BigDecimal.ZERO,
@@ -38,7 +38,7 @@ class Stock(
     @Column(nullable = false)
     var minimumQuantity: BigDecimal = BigDecimal.ZERO,
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     var maximumQuantity: BigDecimal? = null,
 
     @Column(nullable = false)

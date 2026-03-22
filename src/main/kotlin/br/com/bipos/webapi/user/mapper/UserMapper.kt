@@ -2,7 +2,6 @@ package br.com.bipos.webapi.user.mapper
 
 import br.com.bipos.webapi.user.dto.UserResponseDTO
 import br.com.bipos.webapi.domain.user.AppUser
-import java.time.ZoneOffset
 
 fun AppUser.toDTO() = UserResponseDTO(
     id = this.id,
@@ -11,6 +10,6 @@ fun AppUser.toDTO() = UserResponseDTO(
     role = this.role,
     active = this.active,
     photoUrl = photoUrl,
-    updatePhotoAt = this.updatePhotoAt ?: this.createdAt.toInstant(ZoneOffset.UTC),
+    updatePhotoAt = this.updatePhotoAt,
     createdAt = this.createdAt
 )
