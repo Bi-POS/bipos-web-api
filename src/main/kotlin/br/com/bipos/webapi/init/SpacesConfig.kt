@@ -14,9 +14,9 @@ class SpacesConfig {
 
     @Bean
     fun s3Client(
-        @Value("\${DO_SPACES_KEY}") key: String,
-        @Value("\${DO_SPACES_SECRET}") secret: String,
-        @Value("\${DO_SPACES_REGION}") region: String
+        @Value("\${DO_SPACES_KEY:dev-spaces-key}") key: String,
+        @Value("\${DO_SPACES_SECRET:dev-spaces-secret}") secret: String,
+        @Value("\${DO_SPACES_REGION:nyc3}") region: String
     ): S3Client =
         S3Client.builder()
             .endpointOverride(URI.create("https://$region.digitaloceanspaces.com"))

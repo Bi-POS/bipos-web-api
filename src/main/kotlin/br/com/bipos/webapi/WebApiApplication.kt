@@ -11,7 +11,7 @@ import org.springframework.cache.annotation.EnableCaching
 
 @EnableCaching
 @SpringBootApplication
-@EntityScan("br.com.bipos.webapi.domain")
+@EntityScan("br.com.bipos.webapi")
 @EnableConfigurationProperties(
     CorsProperties::class,
     WebJwtProperties::class,
