@@ -1,6 +1,7 @@
 // possettings/SmartPosSettingsController.kt
 package br.com.bipos.webapi.possettings
 
+import br.com.bipos.webapi.audit.toOperationalAuditActor
 import br.com.bipos.webapi.security.CurrentUser
 import br.com.bipos.webapi.security.requireCompanyId
 import br.com.bipos.webapi.user.AppUserDetails
@@ -12,7 +13,7 @@ import org.springframework.web.bind.annotation.*
 import java.util.*
 
 @RestController
-@RequestMapping("/smartpos/settings", "/api/v1/smartpos/settings")
+@RequestMapping("/smartpos/settings", "/api/v1/smartpos/settings", "/api/v1/pos/admin/settings")
 class SmartPosSettingsController(
     private val settingsService: SmartPosSettingsService
 ) {
@@ -39,7 +40,25 @@ class SmartPosSettingsController(
     ): ResponseEntity<SmartPosSettingsResponse> {
         val companyId = userPrincipal.requireCompanyId()
 
-        val response = settingsService.createOrUpdateSettings(companyId, request)
+        val response = settingsService.createOrUpdateSettings(
+            companyId = companyId,
+            request = request,
+            actor = userPrincipal.toOperationalAuditActor()
+        )
         return ResponseEntity.status(HttpStatus.CREATED).body(response)
+    }
+
+    @PutMapping
+    fun replaceSettings(
+        @CurrentUser userPrincipal: AppUserDetails,
+        @Valid @RequestBody request: SmartPosSettingsRequest
+    ): ResponseEntity<SmartPosSettingsResponse> {
+        val companyId = userPrincipal.requireCompanyId()
+        val response = settingsService.createOrUpdateSettings(
+            companyId = companyId,
+            request = request,
+            actor = userPrincipal.toOperationalAuditActor()
+        )
+        return ResponseEntity.ok(response)
     }
 }

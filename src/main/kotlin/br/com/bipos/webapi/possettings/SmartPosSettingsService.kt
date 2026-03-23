@@ -1,5 +1,8 @@
 package br.com.bipos.webapi.possettings
 
+import br.com.bipos.webapi.audit.OperationalAuditAction
+import br.com.bipos.webapi.audit.OperationalAuditActor
+import br.com.bipos.webapi.audit.OperationalAuditService
 import br.com.bipos.webapi.company.CompanyRepository
 import br.com.bipos.webapi.companymodule.CompanyModuleDto
 import br.com.bipos.webapi.companymodule.toDto
@@ -20,7 +23,8 @@ import java.util.*
 class SmartPosSettingsService(
     private val repository: SmartPosSettingsRepository,
     private val companyRepository: CompanyRepository,
-    private val passwordEncoder: BCryptPasswordEncoder
+    private val passwordEncoder: BCryptPasswordEncoder,
+    private val auditService: OperationalAuditService
 ) {
 
     companion object {
@@ -30,15 +34,16 @@ class SmartPosSettingsService(
     @Transactional
     fun createOrUpdateSettings(
         companyId: UUID,
-        request: SmartPosSettingsRequest
+        request: SmartPosSettingsRequest,
+        actor: OperationalAuditActor
     ): SmartPosSettingsResponse {
-        val company = companyRepository.findById(companyId)
-            .orElseThrow { ResourceNotFoundException("Empresa não encontrada") }
+        val company = loadCompany(companyId)
 
         validateRequest(request)
 
         val settings = repository.findByCompanyIdAndIsActiveTrue(companyId)
             .orElseGet { SmartPosSettings(companyId = companyId) }
+        val previousMode = settings.saleOperationMode
 
         settings.saleOperationMode = SmartPosSaleOperationMode.fromString(request.saleOperationMode)
         settings.print = SmartPosPrint.fromString(request.print)
@@ -60,6 +65,19 @@ class SmartPosSettingsService(
 
         val saved = repository.save(settings)
         val companyModules = company.modules.mapNotNull { it.toDto() }
+        if (previousMode != saved.saleOperationMode) {
+            auditService.log(
+                companyId = companyId,
+                actor = actor,
+                action = OperationalAuditAction.SALE_OPERATION_MODE_CHANGED,
+                targetType = "SMARTPOS_SETTINGS",
+                targetId = saved.id,
+                summary = "Modo de operação do POS alterado de ${previousMode.name} para ${saved.saleOperationMode.name}",
+                before = mapOf("saleOperationMode" to previousMode.name),
+                after = mapOf("saleOperationMode" to saved.saleOperationMode.name),
+                metadata = mapOf("settingsId" to saved.id)
+            )
+        }
 
         return toResponse(saved, companyModules)
     }
@@ -99,19 +117,14 @@ class SmartPosSettingsService(
     fun getSettings(companyId: UUID): SmartPosSettingsResponse {
         logger.debug("Fetching SmartPOS settings for company {}", companyId)
 
+        val company = loadCompany(companyId)
         val settings = repository.findByCompanyIdAndIsActiveTrue(companyId)
-            .orElseThrow {
-                logger.warn("SmartPOS settings not found for company {}", companyId)
-                ResourceNotFoundException("Configurações não encontradas para a empresa")
+            .orElseGet {
+                logger.info("SmartPOS settings not found for company {}. Creating default record.", companyId)
+                repository.save(SmartPosSettings(companyId = companyId))
             }
 
         logger.debug("SmartPOS settings found with id {}", settings.id)
-
-        val company = companyRepository.findById(companyId)
-            .orElseThrow {
-                logger.warn("Company {} not found while fetching SmartPOS settings", companyId)
-                ResourceNotFoundException("Empresa não encontrada")
-            }
 
         logger.debug("Company {} found for SmartPOS settings", company.name)
 
@@ -120,6 +133,12 @@ class SmartPosSettingsService(
 
         return toResponse(settings, companyModules)
     }
+
+    private fun loadCompany(companyId: UUID) = companyRepository.findById(companyId)
+        .orElseThrow {
+            logger.warn("Company {} not found while handling SmartPOS settings", companyId)
+            ResourceNotFoundException("Empresa não encontrada")
+        }
 
     private fun toResponse(
         settings: SmartPosSettings,
