@@ -18,7 +18,7 @@ interface SalesReportRepository : Repository<Sale, UUID> {
             COUNT(s.id) as count
         FROM Sale s
         WHERE s.company.id = :companyId
-          AND s.status = 'PAID'
+          AND s.status = 'COMPLETED'
           AND s.createdAt BETWEEN :start AND :end
         GROUP BY DATE(s.createdAt)
         ORDER BY period
@@ -38,7 +38,7 @@ interface SalesReportRepository : Repository<Sale, UUID> {
             COUNT(s.id) as count
         FROM Sale s
         WHERE s.company.id = :companyId
-          AND s.status = 'PAID'
+          AND s.status = 'COMPLETED'
           AND s.createdAt BETWEEN :start AND :end
         GROUP BY TO_CHAR(s.createdAt, 'YYYY-MM')
         ORDER BY period
@@ -59,7 +59,7 @@ interface SalesReportRepository : Repository<Sale, UUID> {
     FROM Sale s
     JOIN s.payments p
     WHERE s.company.id = :companyId
-      AND s.status = 'PAID'
+      AND s.status = 'COMPLETED'
       AND p.status = 'PAID'
       AND s.createdAt BETWEEN :start AND :end
     GROUP BY p.method
@@ -85,7 +85,7 @@ interface SalesReportRepository : Repository<Sale, UUID> {
     JOIN s.items i
     JOIN i.product prod
     WHERE s.company.id = :companyId
-      AND s.status = 'PAID'
+      AND s.status = 'COMPLETED'
       AND p.status = 'PAID'
       AND p.method = :method
       AND s.createdAt BETWEEN :start AND :end
@@ -113,7 +113,7 @@ interface SalesReportRepository : Repository<Sale, UUID> {
     JOIN s.items i
     JOIN i.product prod
     WHERE s.company.id = :companyId
-      AND s.status = 'PAID'
+      AND s.status = 'COMPLETED'
       AND p.status = 'PAID'
       AND p.method = :method
       AND s.createdAt BETWEEN :start AND :end
@@ -215,7 +215,7 @@ interface SalesReportRepository : Repository<Sale, UUID> {
     JOIN p.sale s
     WHERE s.company.id = :companyId
       AND p.status = 'PAID'
-      AND s.status = 'PAID'
+      AND s.status = 'COMPLETED'
       AND p.paidAt BETWEEN :start AND :end
     GROUP BY p.posSerial
     ORDER BY SUM(p.amount) DESC

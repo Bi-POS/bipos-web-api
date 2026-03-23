@@ -67,7 +67,7 @@ interface GraphicsRepository : Repository<Payment, UUID> {
         JOIN s.items i
         JOIN i.product prod
         WHERE s.company.id = :companyId
-          AND s.status = 'PAID'
+          AND s.status = 'COMPLETED'
         GROUP BY prod.name
         ORDER BY SUM(i.subtotal) DESC
         """
