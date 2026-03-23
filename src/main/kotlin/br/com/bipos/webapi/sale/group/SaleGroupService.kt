@@ -10,6 +10,7 @@ import br.com.bipos.webapi.module.ModuleRepository
 import br.com.bipos.webapi.sale.SaleModuleService
 import br.com.bipos.webapi.sale.group.dto.SaleGroupCreateDTO
 import br.com.bipos.webapi.sale.group.dto.SaleGroupDTO
+import br.com.bipos.webapi.sale.product.SaleProductRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.*
@@ -20,7 +21,8 @@ class SaleGroupService(
     private val saleGroupRepository: SaleGroupRepository,
     private val companyRepository: CompanyRepository,
     private val moduleRepository: ModuleRepository,
-    private val saleModuleService: SaleModuleService
+    private val saleModuleService: SaleModuleService,
+    private val saleProductRepository: SaleProductRepository,
 ) {
 
     @Transactional
@@ -84,7 +86,14 @@ class SaleGroupService(
         val group = saleGroupRepository.findByIdAndCompanyId(groupId, companyId)
             ?: throw ResourceNotFoundException("Grupo não encontrado")
 
+        if (saleProductRepository.existsByGroupId(groupId)) {
+            throw ConflictException(
+                "Não é possível excluir o grupo enquanto existirem produtos vinculados a ele. Exclua os produtos primeiro."
+            )
+        }
+
         saleGroupRepository.delete(group)
+        saleGroupRepository.flush()
     }
 
     fun getById(companyId: UUID, groupId: UUID): SaleGroupDTO {

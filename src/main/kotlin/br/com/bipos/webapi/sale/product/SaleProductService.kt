@@ -8,6 +8,7 @@ import br.com.bipos.webapi.sale.SaleModuleService
 import br.com.bipos.webapi.sale.group.SaleGroupRepository
 import br.com.bipos.webapi.sale.product.dto.SaleProductCreateDTO
 import br.com.bipos.webapi.sale.product.dto.SaleProductDTO
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
@@ -144,6 +145,13 @@ class SaleProductService(
             .findByIdAndGroupIdAndGroupCompanyId(productId, groupId, companyId)
             ?: throw ResourceNotFoundException("Produto não encontrado")
 
-        saleProductRepository.delete(product)
+        try {
+            saleProductRepository.delete(product)
+            saleProductRepository.flush()
+        } catch (_: DataIntegrityViolationException) {
+            throw ConflictException(
+                "Não é possível excluir este produto porque ele já possui vínculo com vendas ou estoque."
+            )
+        }
     }
 }

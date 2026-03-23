@@ -12,6 +12,8 @@ interface SaleProductRepository : JpaRepository<Product, UUID> {
         name: String
     ): Boolean
 
+    fun existsByGroupId(groupId: UUID): Boolean
+
     fun findAllByGroupId(groupId: UUID): List<Product>
 
     fun findByIdAndGroupId(
