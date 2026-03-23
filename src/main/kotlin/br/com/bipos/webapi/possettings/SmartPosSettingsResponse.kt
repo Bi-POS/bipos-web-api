@@ -1,4 +1,3 @@
-// smartpos/dto/SmartPosSettingsResponse.kt
 package br.com.bipos.webapi.possettings
 
 import br.com.bipos.webapi.companymodule.CompanyModuleDto
@@ -7,11 +6,12 @@ import java.time.LocalDateTime
 import java.util.*
 
 data class SmartPosSettingsResponse(
-
     @JsonProperty("id")
     val id: UUID,
 
-    // ===== IMPRESSÃO =====
+    @JsonProperty("saleOperationMode")
+    val saleOperationMode: String,
+
     @JsonProperty("print")
     val print: String,
 
@@ -21,7 +21,6 @@ data class SmartPosSettingsResponse(
     @JsonProperty("logoUrl")
     val logoUrl: String?,
 
-    // ===== SEGURANÇA =====
     @JsonProperty("securityEnabled")
     val securityEnabled: Boolean,
 
@@ -34,7 +33,6 @@ data class SmartPosSettingsResponse(
     @JsonProperty("pinAttempts")
     val pinAttempts: Int,
 
-    // ===== COMPORTAMENTO =====
     @JsonProperty("autoLogoutMinutes")
     val autoLogoutMinutes: Int,
 
@@ -44,11 +42,9 @@ data class SmartPosSettingsResponse(
     @JsonProperty("soundEnabled")
     val soundEnabled: Boolean,
 
-    // ===== MÓDULOS DA COMPANY (via CompanyModule) =====
     @JsonProperty("availableModules")
-    val availableModules: List<CompanyModuleDto>,  // Isso virá da Company, não do Settings
+    val availableModules: List<CompanyModuleDto>,
 
-    // ===== METADATA =====
     @JsonProperty("version")
     val version: Long,
 

@@ -1,4 +1,3 @@
-// domain/settings/SmartPosSettings.kt
 package br.com.bipos.webapi.domain.settings
 
 import jakarta.persistence.*
@@ -17,7 +16,10 @@ class SmartPosSettings(
     @Column(nullable = false, unique = true)
     val companyId: UUID,
 
-    // ===== IMPRESSÃO =====
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    var saleOperationMode: SmartPosSaleOperationMode = SmartPosSaleOperationMode.DIRECT,
+
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     var print: SmartPosPrint = SmartPosPrint.FULL,
@@ -28,7 +30,6 @@ class SmartPosSettings(
     @Column(nullable = true, length = 500)
     var logoUrl: String? = null,
 
-    // ===== SEGURANÇA =====
     @Column(nullable = false)
     var securityEnabled: Boolean = false,
 
@@ -41,7 +42,6 @@ class SmartPosSettings(
     @Column(nullable = true)
     var lastPinChange: LocalDateTime? = null,
 
-    // ===== COMPORTAMENTO =====
     @Column(nullable = false)
     var autoLogoutMinutes: Int = 5,
 
@@ -51,7 +51,6 @@ class SmartPosSettings(
     @Column(nullable = false)
     var soundEnabled: Boolean = true,
 
-    // ===== CONTROLE =====
     @Column(nullable = false)
     val createdAt: LocalDateTime = LocalDateTime.now(),
 
@@ -65,7 +64,6 @@ class SmartPosSettings(
     var isActive: Boolean = true
 ) {
 
-    // 🔥 MÉTODO ADICIONADO: Atualizar PIN
     fun updatePin(newPinHash: String) {
         this.pinHash = newPinHash
         this.lastPinChange = LocalDateTime.now()
@@ -73,7 +71,6 @@ class SmartPosSettings(
         this.updatedAt = LocalDateTime.now()
     }
 
-    // 🔥 MÉTODO ADICIONADO: Registrar tentativa de PIN
     fun registerPinAttempt(success: Boolean) {
         if (success) {
             this.pinAttempts = 0
@@ -83,12 +80,10 @@ class SmartPosSettings(
         this.updatedAt = LocalDateTime.now()
     }
 
-    // 🔥 MÉTODO ADICIONADO: Verificar se PIN está bloqueado
     fun isPinBlocked(): Boolean {
         return pinAttempts >= 5
     }
 
-    // 🔥 MÉTODO ADICIONADO: Resetar tentativas
     fun resetPinAttempts() {
         this.pinAttempts = 0
         this.updatedAt = LocalDateTime.now()

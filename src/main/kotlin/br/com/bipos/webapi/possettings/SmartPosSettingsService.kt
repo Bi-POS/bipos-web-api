@@ -1,10 +1,10 @@
-// possettings/SmartPosSettingsService.kt
 package br.com.bipos.webapi.possettings
 
 import br.com.bipos.webapi.company.CompanyRepository
 import br.com.bipos.webapi.companymodule.CompanyModuleDto
 import br.com.bipos.webapi.companymodule.toDto
 import br.com.bipos.webapi.domain.settings.SmartPosPrint
+import br.com.bipos.webapi.domain.settings.SmartPosSaleOperationMode
 import br.com.bipos.webapi.domain.settings.SmartPosSettings
 import br.com.bipos.webapi.exception.BusinessException
 import br.com.bipos.webapi.exception.InternalServerException
@@ -32,20 +32,15 @@ class SmartPosSettingsService(
         companyId: UUID,
         request: SmartPosSettingsRequest
     ): SmartPosSettingsResponse {
-        // Valida se a empresa existe
         val company = companyRepository.findById(companyId)
             .orElseThrow { ResourceNotFoundException("Empresa não encontrada") }
 
-        // Validações de negócio
         validateRequest(request)
 
-        // Busca configuração existente ou cria nova (agora apenas por companyId)
         val settings = repository.findByCompanyIdAndIsActiveTrue(companyId)
-            .orElseGet {
-                SmartPosSettings(companyId = companyId)
-            }
+            .orElseGet { SmartPosSettings(companyId = companyId) }
 
-        // Atualiza campos de impressão
+        settings.saleOperationMode = SmartPosSaleOperationMode.fromString(request.saleOperationMode)
         settings.print = SmartPosPrint.fromString(request.print)
         settings.printLogo = request.printLogo
         settings.logoUrl = when {
@@ -54,15 +49,12 @@ class SmartPosSettingsService(
             else -> null
         }
 
-        // Atualiza comportamento
         settings.autoLogoutMinutes = request.autoLogoutMinutes
         settings.darkMode = request.darkMode
         settings.soundEnabled = request.soundEnabled
 
-        // Atualiza segurança
         updateSecurity(settings, request.security)
 
-        // Metadados
         settings.updatedAt = LocalDateTime.now()
         settings.version = settings.version + 1
 
@@ -74,21 +66,14 @@ class SmartPosSettingsService(
 
     private fun updateSecurity(settings: SmartPosSettings, security: SmartPosSecurityRequest?) {
         when {
-            security == null -> {
-                // Se não veio security no request, mantém como estava
-                return
-            }
-
+            security == null -> return
             !security.enabled -> {
-                // Desativou segurança
                 settings.securityEnabled = false
                 settings.pinHash = null
                 settings.pinAttempts = 0
                 settings.lastPinChange = null
             }
-
             else -> {
-                // Ativou segurança
                 settings.securityEnabled = true
 
                 if (security.pin.isNullOrBlank()) {
@@ -105,7 +90,6 @@ class SmartPosSettingsService(
     }
 
     private fun validateRequest(request: SmartPosSettingsRequest) {
-        // Validações adicionais se necessário
         if (request.autoLogoutMinutes !in 1..60) {
             throw BusinessException("Tempo de logout deve estar entre 1 e 60 minutos")
         }
@@ -145,6 +129,7 @@ class SmartPosSettingsService(
 
         return SmartPosSettingsResponse(
             id = settingsId,
+            saleOperationMode = settings.saleOperationMode.name,
             print = settings.print.name,
             printLogo = settings.printLogo,
             logoUrl = settings.logoUrl,

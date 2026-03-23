@@ -1,12 +1,17 @@
-// smartpos/dto/SmartPosSettingsRequest.kt
 package br.com.bipos.webapi.possettings
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import jakarta.validation.constraints.*
+import jakarta.validation.constraints.Max
+import jakarta.validation.constraints.Min
+import jakarta.validation.constraints.NotNull
+import jakarta.validation.constraints.Pattern
+import jakarta.validation.constraints.Size
 
 data class SmartPosSettingsRequest(
+    @field:NotNull(message = "Tipo de operação é obrigatório")
+    @JsonProperty("saleOperationMode")
+    val saleOperationMode: String = "DIRECT",
 
-    // ===== IMPRESSÃO =====
     @field:NotNull(message = "Tipo de impressão é obrigatório")
     @JsonProperty("print")
     val print: String,
@@ -17,11 +22,9 @@ data class SmartPosSettingsRequest(
     @JsonProperty("logoUrl")
     val logoUrl: String? = null,
 
-    // ===== SEGURANÇA =====
     @JsonProperty("security")
     val security: SmartPosSecurityRequest? = null,
 
-    // ===== COMPORTAMENTO =====
     @JsonProperty("autoLogoutMinutes")
     @field:Min(1, message = "Tempo mínimo de logout é 1 minuto")
     @field:Max(60, message = "Tempo máximo de logout é 60 minutos")
